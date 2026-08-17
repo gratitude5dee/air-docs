@@ -1,7 +1,7 @@
 ---
-title: "Mini-Apps: Interactive Cards Inside Messages"
+title: "Mini-Apps: Interactive iMessage Cards from Your Agent"
 sidebarTitle: "Mini-Apps"
-description: "Airv mini-apps are interactive webviews that appear as iMessage cards — update a Kanban board, check a to-do list, or view your agent's screen without leaving Messages."
+description: "Airv mini-apps open as interactive cards inside iMessage — move Kanban cards, check tasks, or view your agent's screen without leaving Messages."
 ---
 
 When your agent has something for you to review, approve, or interact with, it doesn't just send a wall of text — it sends a mini-app. Mini-apps are lightweight interactive webviews that your agent delivers as iMessage app cards. You tap the card, make your change, and the card updates in place. No browser switch, no separate app, no second message asking if you saw the first one.
@@ -14,7 +14,7 @@ On the **web app**, the same interaction produces an inline panel inside the cha
 
 ## Available mini-apps
 
-<CardGroup cols={2}>
+<CardGroup cols={3}>
   <Card title="Kanban" icon="table-columns">
     Move cards across columns on your agent's Kanban board directly from a message. Drag to reorder, tap to open a card's detail, and close when you're done.
   </Card>
@@ -24,16 +24,11 @@ On the **web app**, the same interaction produces an inline panel inside the cha
   <Card title="Computer Use" icon="display">
     View your agent's live desktop stream and interact with it directly — click, type, and guide your agent through anything it's working on.
   </Card>
-  <Card title="Wallet" icon="wallet">
-    Review and approve transactions your agent has queued. See the amount, destination, and reason before you sign off.
-  </Card>
-  <Card title="Calendar" icon="calendar">
-    Review events your agent has scheduled or proposed. Approve, reschedule, or decline without switching to a calendar app.
-  </Card>
-  <Card title="Creative Tools" icon="wand-magic-sparkles">
-    Image editor, video editor, music studio, storyboard, and 3D studio — your agent generates a draft and you review or refine it in the same message thread.
-  </Card>
 </CardGroup>
+
+## Coming soon
+
+Additional mini-apps are in development, including Wallet (review and approve queued transactions), Calendar (review and approve scheduled events), and a suite of creative tools for image, video, and music review. These will appear in your Messages thread through the same card interface once available.
 
 ## How a mini-app interaction works
 
@@ -45,7 +40,7 @@ On the **web app**, the same interaction produces an inline panel inside the cha
     Tap the card to open the mini-app webview inline within Messages. The full interactive interface loads without leaving the app.
   </Step>
   <Step title="Take action">
-    Move a Kanban card, check off a task, approve a transaction, or review a calendar event. The interface responds immediately.
+    Move a Kanban card, check off a task, or watch your agent's desktop stream. The interface responds immediately.
   </Step>
   <Step title="The card updates in place">
     Once you act, the card reflects the new state right in your message thread. No follow-up message, no confirmation prompt, no context switch.
@@ -64,4 +59,4 @@ If you forward a card to someone else, it will be non-functional: either already
 
 ## Sending a mini-app manually
 
-Your agent decides when to send a card based on context, but you can also push one yourself. In the web app, navigate to the relevant section — your Kanban board, Wallet, Calendar, and so on — and use the **Send to iMessage** button to push a fresh, live card directly into your Messages thread.
+Your agent decides when to send a card based on context, but you can also push one yourself. In the web app, navigate to the relevant section — your Kanban board, To-Do list, and so on — and use the **Send to iMessage** button to push a fresh, live card directly into your Messages thread.

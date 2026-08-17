@@ -1,5 +1,5 @@
 ---
-title: "Your Agent: Persistent, Private, and Always Yours"
+title: "Your Agent: Persistent, Private, and Always Available"
 sidebarTitle: "Your Agent"
 description: "Learn how Airv's one-agent-per-user model keeps your assistant's memory, skills, and files completely isolated and always available."
 ---
@@ -24,7 +24,7 @@ Your agent isn't anonymous. From the moment your account is created, it is assig
 
 ## Persistence: Nothing Gets Lost
 
-Your agent's entire state lives in `~/.hermes` on your VM. That single directory contains everything:
+Your agent's entire state is stored durably on your private VM. That persistent storage contains everything:
 
 - **Conversation history** — every message exchanged across all channels
 - **Memory** — facts, preferences, and context your agent has learned about you
@@ -50,7 +50,7 @@ Your VM goes idle automatically after roughly 20 minutes of inactivity — this 
     If your VM is sleeping, it wakes up. Cold start typically completes in under 30 seconds.
   </Step>
   <Step title="Your agent responds">
-    Your agent loads its full context from `~/.hermes` and handles your message as if no time had passed.
+    Your agent loads its full context from persistent storage and handles your message as if no time had passed.
   </Step>
 </Steps>
 

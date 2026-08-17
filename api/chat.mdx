@@ -14,24 +14,24 @@ The Chat API is the primary way you interact with your Airv agent. You post a me
 
 ## Start a chat run
 
-<ParamField body="message" type="string" required>
+<ParamField body="input" type="string" required>
   The message or instruction to send to your agent. Prefix with `/imagine`, `/animate`, or `/zap` to trigger the creative pipeline.
 </ParamField>
 
-<ParamField body="channel" type="string">
-  The originating channel. Pass `"web"` for browser clients. Defaults to `"web"` when omitted.
+<ParamField body="via" type="string">
+  The originating channel. Pass `"voice"` for voice clients. Omit or pass any other value to use the default web channel.
 </ParamField>
 
 ### `POST /api/chat`
 
-Sends a message to your agent and opens a new run. For standard messages the response contains a `run_id` you pass to the SSE endpoint. For creative commands the response contains a `creative_job_id` instead.
+Sends a message to your agent and opens a new run. For standard messages the response contains a `run_id` you pass to the SSE endpoint. For creative commands the response contains a `creative_job_id` and a `mode` field instead.
 
 <CodeGroup>
 ```bash cURL
 curl -s -X POST https://air.wzrd.tech/api/chat \
   -H "Content-Type: application/json" \
   --cookie "session=<your-session-cookie>" \
-  -d '{ "message": "Summarise my emails from this morning", "channel": "web" }'
+  -d '{ "input": "Summarise my emails from this morning" }'
 ```
 
 ```typescript TypeScript
@@ -40,8 +40,7 @@ const res = await fetch('https://air.wzrd.tech/api/chat', {
   credentials: 'include',
   headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify({
-    message: 'Summarise my emails from this morning',
-    channel: 'web',
+    input: 'Summarise my emails from this morning',
   }),
 });
 const { run_id } = await res.json();
@@ -64,14 +63,16 @@ const { run_id } = await res.json();
 
 ### Creative commands
 
-When your message starts with `/imagine`, `/animate`, or `/zap`, Airv routes the request to the creative pipeline. The response shape changes to include a `creative_job_id` rather than a `run_id`.
+When your message starts with `/imagine`, `/animate`, or `/zap`, Airv routes the request to the creative pipeline. The response shape changes to include a `creative_job_id` and `mode` rather than a `run_id`.
+
+If the command cannot be parsed unambiguously, the API returns a `creative_line` string with a clarifying prompt instead of starting a job.
 
 <CodeGroup>
 ```bash cURL
 curl -s -X POST https://air.wzrd.tech/api/chat \
   -H "Content-Type: application/json" \
   --cookie "session=<your-session-cookie>" \
-  -d '{ "message": "/imagine a sunset over the ocean" }'
+  -d '{ "input": "/imagine a sunset over the ocean" }'
 ```
 
 ```typescript TypeScript
@@ -79,10 +80,14 @@ const res = await fetch('https://air.wzrd.tech/api/chat', {
   method: 'POST',
   credentials: 'include',
   headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({ message: '/imagine a sunset over the ocean' }),
+  body: JSON.stringify({ input: '/imagine a sunset over the ocean' }),
 });
-const { creative_job_id } = await res.json();
-// then stream /api/creative/{creative_job_id}/events
+const data = await res.json();
+if (data.creative_job_id) {
+  // stream /api/creative/{creative_job_id}/events
+} else if (data.creative_line) {
+  // show the clarifying prompt to the user
+}
 ```
 </CodeGroup>
 
@@ -92,9 +97,26 @@ const { creative_job_id } = await res.json();
   Identifier for the creative job. Use this to subscribe to progress events on the `/api/creative/{creative_job_id}/events` SSE stream.
 </ResponseField>
 
+<ResponseField name="mode" type="string">
+  The creative mode that was selected: `"imagine"`, `"animate"`, or `"zap"`.
+</ResponseField>
+
 ```json
 {
-  "creative_job_id": "cjob_xyz789"
+  "creative_job_id": "cjob_xyz789",
+  "mode": "imagine"
+}
+```
+
+**Ambiguous command response** — `200 OK`
+
+<ResponseField name="creative_line" type="string">
+  A clarifying message to show the user when the creative command could not be unambiguously parsed.
+</ResponseField>
+
+```json
+{
+  "creative_line": "I'm not sure what you'd like me to create. Try: /imagine a sunset over the ocean"
 }
 ```
 
@@ -197,10 +219,11 @@ data: {"type":"done"}
 
 | Status | Meaning |
 |--------|---------|
-| `400` | Request body is missing or malformed. Check that `message` is a non-empty string. |
+| `400` | Request body is missing or `input` is an empty string. |
 | `401` | No valid session cookie. Complete phone OTP authentication first. |
 | `404` | The `runId` does not exist or does not belong to your account. |
 | `408` / stream close | The run exceeded the 800-second maxDuration. Reconnect or start a new run. |
+| `429` | Your agent is currently busy. Wait a moment and retry. |
 | `500` | Internal error. Retry with exponential back-off. |
 
 <Warning>

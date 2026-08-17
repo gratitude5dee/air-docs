@@ -1,5 +1,5 @@
 ---
-title: "Chat with Your Agent over iMessage"
+title: "iMessage: Chat Directly with Your Personal Airv Agent"
 sidebarTitle: "iMessage"
 description: "Your Airv agent has a dedicated iMessage number. Text it like any contact — replies stream in real time, and interactive cards update in place."
 ---
@@ -8,7 +8,7 @@ Your Airv agent has its own iMessage number — dedicated to you, not shared wit
 
 ## Finding Your Agent's Number
 
-Your agent's iMessage number was included in your invite email and on the contact card your agent sends automatically after your first exchange. Save that contact card right away — once your agent is a saved contact in Messages, the "Report Junk" banner disappears permanently and messages display correctly with your agent's name and photo.
+Your agent's iMessage number was included in your invite and on the contact card your agent sends automatically after your first exchange. Save that contact card right away — once your agent is a saved contact in Messages, the "Report Junk" banner disappears permanently and messages display correctly with your agent's name and photo.
 
 <Note>
   If you haven't received a contact card yet, send your agent any message and it will reply with one automatically.
@@ -21,13 +21,13 @@ Your agent's iMessage number was included in your invite email and on the contac
     Your agent's reply appears in the message bubble immediately and grows in place as it thinks. You watch the answer form — you're not waiting for a finished essay to land all at once.
   </Card>
   <Card title="Typing indicator" icon="ellipsis">
-    A typing indicator appears while your agent is actively working on a response, so you always know it received your message and is on it.
+    A typing indicator appears as soon as your message is received, so you always know your agent got it and is working on a response.
   </Card>
   <Card title="Burst debounce" icon="messages">
     Send multiple messages in quick succession and your agent waits for you to finish before it starts replying. It addresses your actual question, not just the first fragment you sent.
   </Card>
   <Card title="Cold-start warm-up" icon="clock">
-    If your VM was asleep, expect the typing indicator to show for about 30 seconds on your first message of the session. Once the VM is running, all subsequent messages in that session respond quickly.
+    If your agent was asleep, expect the typing indicator to show for about 30 seconds on your first message of the session. Once it's running, all subsequent messages in that session respond quickly.
   </Card>
 </CardGroup>
 
@@ -62,10 +62,13 @@ Your agent treats senders differently depending on who they are.
 
 <Steps>
   <Step title="Tier 0 — You (Owner)">
-    Messages from your own phone number are fully trusted. Your agent acts on your instructions immediately without any approval gate.
+    Messages from your own verified phone number are fully trusted. Your agent acts on your instructions immediately, subject to approval gates for irreversible actions.
   </Step>
-  <Step title="Tier 2 — Everyone else">
-    If you share your agent's iMessage number with other people — for example, by passing it along as a contact — those people can text your agent too. Their messages arrive as Tier 2 (unknown sender) and require your explicit approval before your agent acts on any request from them.
+  <Step title="Tier 1 — Known Contacts">
+    People you've promoted in the **People** tab are trusted contacts. Your agent can read their messages, draft responses, and schedule actions on their behalf — but irreversible actions still require your approval before they execute.
+  </Step>
+  <Step title="Tier 2 — Everyone Else">
+    If you share your agent's iMessage number with someone you haven't explicitly trusted, their messages arrive as Tier 2. Your agent reads and summarises what they sent, but every action lands in **Needs You** for your approval before anything happens.
   </Step>
 </Steps>
 

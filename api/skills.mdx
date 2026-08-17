@@ -16,10 +16,10 @@ Skills are discrete capability packages that extend your Airv agent's repertoire
 
 ### `GET /api/skills`
 
-Returns a list of skills matching your search query. If you omit the `q` parameter, the endpoint returns a default catalogue of available skills.
+Returns a list of skills matching your search query. The `q` parameter is required — use a descriptive keyword to find relevant skills.
 
-<ParamField query="q" type="string">
-  Full-text search query. Matches against skill names, descriptions, and tags. Omit to browse the full catalogue.
+<ParamField query="q" type="string" required>
+  Full-text search query. Matches against skill names, descriptions, and tags. For example, `"research"` or `"writing"`.
 </ParamField>
 
 <CodeGroup>
@@ -33,51 +33,45 @@ const res = await fetch(
   'https://air.wzrd.tech/api/skills?q=research',
   { credentials: 'include' }
 );
-const { skills } = await res.json();
+const { results } = await res.json();
 ```
 </CodeGroup>
 
 **Response** — `200 OK`
 
-<ResponseField name="skills" type="array">
+<ResponseField name="results" type="array">
   Array of skill objects matching the query.
 </ResponseField>
 
-<ResponseField name="skills[].identifier" type="string">
+<ResponseField name="results[].identifier" type="string">
   Unique slug used to install the skill, e.g. `"web-research-pro"`.
 </ResponseField>
 
-<ResponseField name="skills[].name" type="string">
+<ResponseField name="results[].name" type="string">
   Human-readable display name of the skill.
 </ResponseField>
 
-<ResponseField name="skills[].description" type="string">
+<ResponseField name="results[].description" type="string">
   Short description of what the skill enables.
 </ResponseField>
 
-<ResponseField name="skills[].tags" type="array of strings">
-  Category tags, e.g. `["research", "web", "summarisation"]`.
-</ResponseField>
-
-<ResponseField name="skills[].installed" type="boolean">
+<ResponseField name="results[].installed" type="boolean">
   `true` if this skill is currently installed in your agent environment.
 </ResponseField>
 
 ```json
 {
-  "skills": [
+  "results": [
     {
       "identifier": "web-research-pro",
       "name": "Web Research Pro",
       "description": "Deep web search, page extraction, and structured summarisation.",
-      "tags": ["research", "web", "summarisation"],
       "installed": false
     },
     {
       "identifier": "academic-search",
       "name": "Academic Search",
       "description": "Query arXiv, PubMed, and Semantic Scholar for academic papers.",
-      "tags": ["research", "academic"],
       "installed": true
     }
   ]
@@ -115,29 +109,19 @@ const res = await fetch('https://air.wzrd.tech/api/skills', {
   headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify({ action: 'install', identifier: 'web-research-pro' }),
 });
-const result = await res.json();
+const { ok } = await res.json();
 ```
 </CodeGroup>
 
 **Response** — `200 OK`
 
-<ResponseField name="action" type="string">
-  The action that was performed: `"install"`.
-</ResponseField>
-
-<ResponseField name="identifier" type="string">
-  The identifier of the skill that was installed.
-</ResponseField>
-
-<ResponseField name="status" type="string">
-  Installation outcome, e.g. `"installed"`.
+<ResponseField name="ok" type="boolean">
+  `true` when the skill was successfully installed.
 </ResponseField>
 
 ```json
 {
-  "action": "install",
-  "identifier": "web-research-pro",
-  "status": "installed"
+  "ok": true
 }
 ```
 
@@ -172,29 +156,19 @@ const res = await fetch('https://air.wzrd.tech/api/skills', {
   headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify({ action: 'uninstall', name: 'Web Research Pro' }),
 });
-const result = await res.json();
+const { ok } = await res.json();
 ```
 </CodeGroup>
 
 **Response** — `200 OK`
 
-<ResponseField name="action" type="string">
-  The action that was performed: `"uninstall"`.
-</ResponseField>
-
-<ResponseField name="name" type="string">
-  The name of the skill that was removed.
-</ResponseField>
-
-<ResponseField name="status" type="string">
-  Removal outcome, e.g. `"uninstalled"`.
+<ResponseField name="ok" type="boolean">
+  `true` when the skill was successfully uninstalled.
 </ResponseField>
 
 ```json
 {
-  "action": "uninstall",
-  "name": "Web Research Pro",
-  "status": "uninstalled"
+  "ok": true
 }
 ```
 
@@ -204,10 +178,11 @@ const result = await res.json();
 
 | Status | Meaning |
 |--------|---------|
-| `400` | Invalid `action` value, or `identifier` / `name` is missing. Check your request body. |
+| `400` | `q` is missing on a `GET` request, or `action` value is invalid, or `identifier` / `name` is missing. Check your request. |
 | `401` | Session cookie is missing or expired. |
 | `404` | No skill found matching the given `identifier` or `name`. Use `GET /api/skills` to confirm the correct value. |
 | `409` | Install: the skill is already installed. Uninstall: the skill is not currently installed. |
+| `429` | Your agent is currently busy. Wait a moment and retry. |
 | `504` | The install or uninstall operation timed out after 300 seconds. Check the current state with `GET /api/skills` and retry if needed. |
 | `500` | Internal error. |
 

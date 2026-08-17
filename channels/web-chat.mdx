@@ -1,5 +1,5 @@
 ---
-title: "Web Chat: Talk to Your Agent in the Browser"
+title: "Web Chat: Full Browser Interface for Your Airv Agent"
 sidebarTitle: "Web Chat"
 description: "The Airv web app gives you a full chat interface, decision queue, skills manager, and connector hub — all from your browser at air.wzrd.tech."
 ---
@@ -26,7 +26,7 @@ The Chat tab is a full conversation interface that shares history and context wi
     Web chat and iMessage run on the same conversation session. Context you established in iMessage appears here, and anything you discuss in the web app is available when you switch back to Messages.
   </Card>
   <Card title="Voice input" icon="microphone">
-    Click the mic button to record a voice note up to 5 minutes long (25 MB max). It's transcribed automatically and sent as text, so the chat history stays readable.
+    Click the mic button to record a voice note up to 5 minutes long (25 MB max). It's transcribed automatically and sent as text, so the chat history stays readable. Voice transcription is rate-limited to 20 clips per hour.
   </Card>
   <Card title="Creative commands" icon="wand-magic-sparkles">
     Type a slash command to route directly to the creative pipeline and get back a result card with your generated asset.
@@ -66,7 +66,7 @@ Every tab in the Airv web app serves a distinct purpose. Here's what each one do
     Connect external services via OAuth — Gmail, GitHub, and more. Manage which integrations your agent has access to and revoke them at any time.
   </Card>
   <Card title="Computer" icon="desktop">
-    A live view of your agent's cloud Ubuntu VM. Watch what it's doing, take manual control, or review recent actions.
+    A live view of your agent's cloud desktop. Watch what it's doing, take manual control, or review recent actions.
   </Card>
   <Card title="Wallet" icon="wallet">
     Your agent's crypto wallet balance and full activity log. Review transactions and manage spending limits.
@@ -86,7 +86,7 @@ Pair the Airv web app with your local machine for a desktop-native chat experien
 Your session is protected by design, not just by configuration.
 
 - Your session cookie is `httpOnly` — browser JavaScript cannot read or leak it.
-- Box tokens and API keys your agent uses for integrations never appear in the browser. They live server-side inside your agent's secure enclave.
+- The credentials your agent uses for integrations never appear in the browser. They live server-side inside your agent's secure enclave.
 - OAuth flows redirect through Airv's backend so your raw access tokens are never stored in local storage or visible in network requests from the browser.
 
 <Warning>

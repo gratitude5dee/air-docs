@@ -16,7 +16,7 @@ Airv surfaces certain agent actions as decisions before executing them — for e
 
 ### `GET /api/decisions`
 
-Returns all unresolved decisions in your Needs You queue. Each item includes its kind, a human-readable description, and any metadata the agent collected to help you make a choice.
+Returns your most recent unresolved decisions, up to 50 items ordered newest first. Each item includes its kind, a human-readable description, and any metadata the agent collected to help you make a choice.
 
 <CodeGroup>
 ```bash cURL
@@ -28,14 +28,14 @@ curl -s https://air.wzrd.tech/api/decisions \
 const res = await fetch('https://air.wzrd.tech/api/decisions', {
   credentials: 'include',
 });
-const decisions = await res.json();
+const { decisions } = await res.json();
 ```
 </CodeGroup>
 
 **Response** — `200 OK`
 
 <ResponseField name="decisions" type="array">
-  Array of pending decision objects.
+  Array of pending decision objects (up to 50, newest first).
 </ResponseField>
 
 <ResponseField name="decisions[].id" type="string">
@@ -46,8 +46,12 @@ const decisions = await res.json();
   The category of decision. One of: `email_draft`, `ad_write`, `content_plan`, `reconnect`, `revise`.
 </ResponseField>
 
-<ResponseField name="decisions[].description" type="string">
-  A short human-readable summary of what the agent is proposing or waiting on.
+<ResponseField name="decisions[].platform" type="string">
+  The platform associated with this decision, if applicable (e.g. `"instagram"`, `"x"`).
+</ResponseField>
+
+<ResponseField name="decisions[].label" type="string">
+  A short human-readable label summarising the decision.
 </ResponseField>
 
 <ResponseField name="decisions[].payload" type="object">
@@ -64,7 +68,8 @@ const decisions = await res.json();
     {
       "id": "dec_001",
       "kind": "email_draft",
-      "description": "Send follow-up email to alice@example.com",
+      "platform": null,
+      "label": "Send follow-up email to alice@example.com",
       "payload": {
         "to": "alice@example.com",
         "subject": "Following up on Q3 proposal",
@@ -75,9 +80,10 @@ const decisions = await res.json();
     {
       "id": "dec_002",
       "kind": "reconnect",
-      "description": "Reconnect Google Calendar — token expired",
+      "platform": "instagram",
+      "label": "Reconnect Instagram — token expired",
       "payload": {
-        "integration": "google_calendar"
+        "integration": "instagram"
       },
       "created_at": "2024-06-10T09:20:00Z"
     }
@@ -107,9 +113,9 @@ Approves or dismisses a pending decision. Approving allows the agent to proceed 
 |------|------------------------|
 | `email_draft` | The agent sends the drafted email immediately. |
 | `ad_write` | The agent submits the ad copy to the connected ad platform. |
-| `content_plan` | The agent queues the content plan for scheduling. |
-| `reconnect` | The agent initiates re-authentication for the flagged integration. |
-| `revise` | The agent applies the suggested revision to the target document or asset. |
+| `content_plan` | The agent queues the content plan and schedules its slots. |
+| `reconnect` | The agent re-queues the parked content slot for publishing. |
+| `revise` | The agent re-queues the parked content slot with the revised content. |
 
 <CodeGroup>
 ```bash cURL (approve)
@@ -133,29 +139,19 @@ const res = await fetch('https://air.wzrd.tech/api/decisions', {
   headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify({ id: 'dec_001', action: 'approve' }),
 });
-const result = await res.json();
+const { ok } = await res.json();
 ```
 </CodeGroup>
 
 **Response** — `200 OK`
 
-<ResponseField name="id" type="string">
-  The ID of the resolved decision.
-</ResponseField>
-
-<ResponseField name="action" type="string">
-  The action that was applied: `"approve"` or `"dismiss"`.
-</ResponseField>
-
-<ResponseField name="status" type="string">
-  Confirmation of the resolution, e.g. `"resolved"`.
+<ResponseField name="ok" type="boolean">
+  `true` when the decision was successfully resolved.
 </ResponseField>
 
 ```json
 {
-  "id": "dec_001",
-  "action": "approve",
-  "status": "resolved"
+  "ok": true
 }
 ```
 
@@ -167,8 +163,8 @@ const result = await res.json();
 |--------|---------|
 | `400` | Missing or invalid `id` or `action`. Ensure `action` is exactly `"approve"` or `"dismiss"`. |
 | `401` | Session cookie is missing or expired. Re-authenticate via phone OTP. |
-| `404` | No decision with the given `id` exists in your queue. It may have already been resolved. |
-| `409` | The decision has already been resolved and cannot be acted on again. |
+| `404` | No pending decision with the given `id` exists in your queue. It may have already been resolved. |
+| `409` | The `email_draft` decision could not be sent because no active inbox is associated with your account. |
 | `500` | Internal error. Retry the request after a short delay. |
 
 <Warning>

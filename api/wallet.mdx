@@ -1,13 +1,13 @@
 ---
 title: "Wallet & Transactions"
 sidebarTitle: "Wallet"
-description: "Retrieve your Airv wallet balance and a scannable QR code for topping up credits, then browse your complete transaction activity history."
+description: "Retrieve your Airv wallet balance, token holdings, and a scannable QR code for receiving funds, then browse your on-chain transaction history."
 ---
 
-The Wallet API gives you a live view of your Airv credit balance and a ready-to-display QR code for topping up, plus a pageable transaction history so you can reconcile spending across agent tasks, creative jobs, and slot publishes. Both endpoints are privately cached for 60 seconds, so you can poll them freely from a dashboard without hammering the server.
+The Wallet API gives you a live view of your Airv wallet — your native balance, any tokens held, and a ready-to-display QR code for receiving funds — plus a transaction history so you can track activity across your account. Both endpoints are privately cached for 60 seconds, so you can poll them freely from a dashboard without hammering the server.
 
 <Note>
-  Both wallet endpoints use `Cache-Control: private, max-age=60`. Your browser or HTTP client will return a cached response for up to 60 seconds before making a fresh network request.
+  Both wallet endpoints use `Cache-Control: private, max-age=60`. Your browser or HTTP client will return a cached response for up to 60 seconds before making a fresh network request. Send a `Cache-Control: no-cache` request header to bypass the cache when you need up-to-the-second data.
 </Note>
 
 ---
@@ -16,7 +16,9 @@ The Wallet API gives you a live view of your Airv credit balance and a ready-to-
 
 ### `GET /api/wallet`
 
-Returns your current balance details and a data URL for a QR code that users can scan to top up their wallet.
+Returns your wallet address, chain, native token balance, any ERC-20 token holdings, and a data URL for a QR code that others can scan to send funds to your address.
+
+When wallet data cannot be fetched from the chain indexer, the response is still returned with `degraded: true` and partial data rather than an error.
 
 <CodeGroup>
 ```bash cURL
@@ -28,45 +30,83 @@ curl -s https://air.wzrd.tech/api/wallet \
 const res = await fetch('https://air.wzrd.tech/api/wallet', {
   credentials: 'include',
 });
-const { balance, qr_data_url } = await res.json();
+const data = await res.json();
 ```
 </CodeGroup>
 
 **Response** — `200 OK`
 
-<ResponseField name="balance" type="object">
-  An object describing your current wallet state.
+<ResponseField name="address" type="string">
+  Your on-chain wallet address.
 </ResponseField>
 
-<ResponseField name="balance.available" type="number">
-  The number of credits currently available to spend.
+<ResponseField name="chain_id" type="number">
+  The EVM chain ID this wallet operates on, e.g. `8453` for Base.
 </ResponseField>
 
-<ResponseField name="balance.currency" type="string">
-  The currency or credit unit label, e.g. `"ARC"`.
+<ResponseField name="native" type="object | null">
+  Native token balance. `null` if the chain indexer is unavailable.
 </ResponseField>
 
-<ResponseField name="balance.lifetime_topped_up" type="number">
-  Total credits ever added to this wallet across all top-ups.
+<ResponseField name="native.symbol" type="string">
+  The native token symbol, e.g. `"ETH"`.
 </ResponseField>
 
-<ResponseField name="balance.lifetime_spent" type="number">
-  Total credits ever consumed by agent tasks, creative jobs, and slot operations.
+<ResponseField name="native.display" type="string">
+  Human-readable balance string, e.g. `"0.042"`.
 </ResponseField>
 
-<ResponseField name="qr_data_url" type="string">
-  A base64-encoded `data:image/png;base64,...` string you can set directly as the `src` of an `<img>` tag. Displays a QR code the user can scan to add credits.
+<ResponseField name="tokens" type="array">
+  Array of ERC-20 token holdings. Empty if no tokens are held or if the indexer is unavailable.
+</ResponseField>
+
+<ResponseField name="tokens[].symbol" type="string">
+  Token symbol, e.g. `"USDC"`.
+</ResponseField>
+
+<ResponseField name="tokens[].name" type="string">
+  Token name, e.g. `"USD Coin"`.
+</ResponseField>
+
+<ResponseField name="tokens[].display" type="string">
+  Human-readable token balance, e.g. `"100.00"`.
+</ResponseField>
+
+<ResponseField name="tokens[].usd" type="null">
+  USD conversion value. Currently always `null`.
+</ResponseField>
+
+<ResponseField name="degraded" type="boolean">
+  `true` if some wallet data could not be fetched from the indexer. The response is still returned with whatever data was available.
+</ResponseField>
+
+<ResponseField name="updated_at" type="string">
+  ISO 8601 timestamp of when this snapshot was generated.
+</ResponseField>
+
+<ResponseField name="receive_qr" type="string">
+  A base64-encoded `data:image/png;base64,...` string you can set directly as the `src` of an `<img>` tag. Displays a QR code encoding your wallet address.
 </ResponseField>
 
 ```json
 {
-  "balance": {
-    "available": 4200,
-    "currency": "ARC",
-    "lifetime_topped_up": 10000,
-    "lifetime_spent": 5800
+  "address": "0xAbCd1234…",
+  "chain_id": 8453,
+  "native": {
+    "symbol": "ETH",
+    "display": "0.042"
   },
-  "qr_data_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA..."
+  "tokens": [
+    {
+      "symbol": "USDC",
+      "name": "USD Coin",
+      "display": "100.00",
+      "usd": null
+    }
+  ],
+  "degraded": false,
+  "updated_at": "2024-06-10T11:00:00Z",
+  "receive_qr": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA…"
 }
 ```
 
@@ -76,10 +116,10 @@ const { balance, qr_data_url } = await res.json();
 const res = await fetch('https://air.wzrd.tech/api/wallet', {
   credentials: 'include',
 });
-const { qr_data_url } = await res.json();
+const { receive_qr } = await res.json();
 
 // In a React component:
-// <img src={qr_data_url} alt="Scan to top up your Airv wallet" />
+// <img src={receive_qr} alt="Scan to send funds to your Airv wallet" />
 ```
 
 ---
@@ -88,7 +128,9 @@ const { qr_data_url } = await res.json();
 
 ### `GET /api/wallet/activity`
 
-Returns your transaction history in reverse-chronological order. Each entry records a credit debit or top-up along with the context that triggered it.
+Returns up to 25 recent on-chain transactions in reverse-chronological order. Each entry records the direction, counterparty, value, and a link to the block explorer.
+
+When the chain indexer is unavailable, the response returns an empty `transactions` array with `degraded: true` rather than an error.
 
 <CodeGroup>
 ```bash cURL
@@ -100,75 +142,65 @@ curl -s https://air.wzrd.tech/api/wallet/activity \
 const res = await fetch('https://air.wzrd.tech/api/wallet/activity', {
   credentials: 'include',
 });
-const { transactions } = await res.json();
+const { transactions, degraded } = await res.json();
 ```
 </CodeGroup>
 
 **Response** — `200 OK`
 
 <ResponseField name="transactions" type="array">
-  Array of transaction objects, most recent first.
+  Array of projected transaction objects, most recent first (up to 25).
 </ResponseField>
 
-<ResponseField name="transactions[].id" type="string">
-  Unique transaction identifier.
+<ResponseField name="transactions[].hash" type="string">
+  On-chain transaction hash.
 </ResponseField>
 
-<ResponseField name="transactions[].type" type="string">
-  Transaction type. One of `"debit"` (credit consumed) or `"credit"` (top-up received).
+<ResponseField name="transactions[].direction" type="string">
+  `"in"` for incoming funds, `"out"` for outgoing.
 </ResponseField>
 
-<ResponseField name="transactions[].amount" type="number">
-  The number of credits involved. Always positive; use `type` to determine direction.
+<ResponseField name="transactions[].counterparty" type="string">
+  The other address in the transaction — the sender on `"in"` transactions, the recipient on `"out"` transactions.
 </ResponseField>
 
-<ResponseField name="transactions[].currency" type="string">
-  The credit unit label, matching the `balance.currency` value.
+<ResponseField name="transactions[].value_display" type="string">
+  Human-readable value of the transaction in native token units, e.g. `"0.001"`.
 </ResponseField>
 
-<ResponseField name="transactions[].description" type="string">
-  Human-readable description of what triggered the transaction, e.g. `"Creative job cjob_xyz789"`, `"Slot publish slt_001"`, `"Top-up via QR"`.
+<ResponseField name="transactions[].timestamp" type="string">
+  ISO 8601 timestamp derived from the block timestamp.
 </ResponseField>
 
-<ResponseField name="transactions[].balance_after" type="number">
-  Your wallet balance immediately after this transaction was applied.
+<ResponseField name="transactions[].explorer_url" type="string">
+  URL to view this transaction on the relevant block explorer.
 </ResponseField>
 
-<ResponseField name="transactions[].created_at" type="string">
-  ISO 8601 timestamp.
+<ResponseField name="degraded" type="boolean">
+  `true` if the indexer was unavailable. The `transactions` array will be empty.
 </ResponseField>
 
 ```json
 {
   "transactions": [
     {
-      "id": "txn_009",
-      "type": "debit",
-      "amount": 50,
-      "currency": "ARC",
-      "description": "Creative job cjob_xyz789",
-      "balance_after": 4200,
-      "created_at": "2024-06-10T11:30:00Z"
+      "hash": "0xdeadbeef…",
+      "direction": "in",
+      "counterparty": "0x1234abcd…",
+      "value_display": "0.01",
+      "timestamp": "2024-06-10T11:30:00Z",
+      "explorer_url": "https://basescan.org/tx/0xdeadbeef…"
     },
     {
-      "id": "txn_008",
-      "type": "credit",
-      "amount": 1000,
-      "currency": "ARC",
-      "description": "Top-up via QR",
-      "balance_after": 4250,
-      "created_at": "2024-06-10T09:00:00Z"
-    },
-    {
-      "id": "txn_007",
-      "type": "debit",
-      "amount": 10,
-      "currency": "ARC",
-      "description": "Slot publish slt_001",
-      "balance_after": 3250,
-      "created_at": "2024-06-09T18:45:00Z"
+      "hash": "0xcafebabe…",
+      "direction": "out",
+      "counterparty": "0x5678efgh…",
+      "value_display": "0.005",
+      "timestamp": "2024-06-09T18:45:00Z",
+      "explorer_url": "https://basescan.org/tx/0xcafebabe…"
     }
-  ]
+  ],
+  "degraded": false
 }
 ```
 
@@ -179,9 +211,9 @@ const { transactions } = await res.json();
 | Status | Meaning |
 |--------|---------|
 | `401` | Session cookie is missing or expired. Re-authenticate via phone OTP. |
-| `404` | No wallet exists for this account yet. Complete onboarding to initialise one. |
+| `404` | No account found for this session. Complete onboarding first. |
 | `500` | Internal error. Retry after a short delay. |
 
 <Tip>
-  Both endpoints respect the `Cache-Control: private, max-age=60` header. If you need up-to-the-second balance data — for example, immediately after a slot publish — wait 60 seconds or send a `Cache-Control: no-cache` request header to bypass the cache.
+  If `degraded` is `true` in the response, the balance or transaction data may be incomplete because the chain indexer was temporarily unavailable. The data will be accurate again once you request it after the 60-second cache expires.
 </Tip>

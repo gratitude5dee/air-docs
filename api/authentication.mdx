@@ -28,14 +28,20 @@ The login flow is a two-step OTP exchange. New users who have not yet created an
     ```
 
     <ParamField body="phone" type="string" required>
-      Your phone number in E.164 format (e.g., `+15551234567`).
+      Your phone number in E.164 format (e.g., `+15551234567`). 10-digit US numbers are accepted and automatically prefixed with `+1`.
     </ParamField>
+
+    **Response** — `200 OK`
+
+    ```json
+    { "ok": true, "sent": true }
+    ```
   </Step>
 
   <Step title="Verify the OTP">
-    Submit the code you received. On success, the server sets the `airv_session` cookie and returns your user object.
+    Submit the code you received. On success for an existing account, the server sets the `airv_session` cookie and returns `{ "ok": true }`.
 
-    If the phone number is not yet registered, the response returns a `signup_token` instead of user data — proceed to Step 3.
+    If the phone number is not yet registered, the response returns `404` with a `signup_token` — proceed to Step 3.
 
     ```http
     POST /api/auth/login
@@ -49,6 +55,18 @@ The login flow is a two-step OTP exchange. New users who have not yet created an
     <ParamField body="code" type="string" required>
       The 6-digit OTP delivered to your phone.
     </ParamField>
+
+    **Response — existing user** — `200 OK` (session cookie set)
+
+    ```json
+    { "ok": true }
+    ```
+
+    **Response — unregistered phone** — `404 Not Found`
+
+    ```json
+    { "error": "no account", "signup_token": "<short-lived token>" }
+    ```
   </Step>
 
   <Step title="Sign up (new users only)">
@@ -62,6 +80,12 @@ The login flow is a two-step OTP exchange. New users who have not yet created an
     <ParamField body="signup_token" type="string" required>
       The short-lived token returned by the OTP verification step for unregistered numbers.
     </ParamField>
+
+    **Response** — `200 OK` (session cookie set)
+
+    ```json
+    { "ok": true }
+    ```
   </Step>
 </Steps>
 
@@ -101,16 +125,14 @@ const res = await fetch('https://air.wzrd.tech/api/auth/login', {
 
 const data = await res.json();
 
-if (!res.ok) {
-  throw new Error(`OTP verification failed: ${data.error}`);
-}
-
-if (data.signup_token) {
+if (res.status === 404 && data.signup_token) {
   // Phone is not yet registered — proceed to Step 3
   console.log('New user — signup required', data.signup_token);
+} else if (!res.ok) {
+  throw new Error(`OTP verification failed: ${data.error}`);
 } else {
   // Existing user — session cookie is now set
-  console.log('Logged in as', data.user.username);
+  console.log('Logged in successfully');
 }
 ```
 
@@ -127,9 +149,8 @@ if (!res.ok) {
   throw new Error(`Signup failed: ${error}`);
 }
 
-const data = await res.json();
 // Session cookie is now set — account provisioned
-console.log('Account created for', data.user.username);
+console.log('Account created successfully');
 ```
 
 </CodeGroup>
@@ -202,8 +223,8 @@ if (res.status === 401) {
   // Not authenticated — redirect to login
 }
 
-const user = await res.json();
-console.log(user);
+const profile = await res.json();
+console.log(profile);
 ```
 
 ### Response Fields
@@ -219,7 +240,13 @@ console.log(user);
       Your chosen display name on Airv.
     </ResponseField>
     <ResponseField name="user.wallet_address" type="string">
-      The EVM wallet address associated with your account (provisioned via thirdweb).
+      The EVM wallet address associated with your account.
+    </ResponseField>
+    <ResponseField name="user.status" type="string">
+      Account status (e.g., `"active"`).
+    </ResponseField>
+    <ResponseField name="user.created_at" type="string">
+      ISO 8601 timestamp of when the account was created.
     </ResponseField>
   </Expandable>
 </ResponseField>
@@ -228,37 +255,58 @@ console.log(user);
   Your current plan capabilities and spend limits.
 
   <Expandable title="entitlement fields">
+    <ResponseField name="entitlement.plan" type="string">
+      The name of your current plan (e.g., `"starter"`, `"pro"`).
+    </ResponseField>
     <ResponseField name="entitlement.speed_tier" type="string">
-      The inference speed tier applied to your agent (e.g., `"balanced"`, `"fast"`).
+      The inference speed tier applied to your agent (e.g., `"balanced"`, `"fast"`, `"deep"`).
     </ResponseField>
     <ResponseField name="entitlement.monthly_cap_usd" type="number">
       Your configured monthly spend cap in USD. Requests are blocked with `429` once this cap is reached.
+    </ResponseField>
+    <ResponseField name="entitlement.spend_mtd_usd" type="number">
+      Your month-to-date spend in USD.
+    </ResponseField>
+    <ResponseField name="entitlement.tier_models" type="object">
+      Human-readable model labels for each available speed tier.
+
+      <Expandable title="tier_models fields">
+        <ResponseField name="tier_models.fast" type="string">
+          Model label for the fast tier.
+        </ResponseField>
+        <ResponseField name="tier_models.balanced" type="string">
+          Model label for the balanced tier.
+        </ResponseField>
+        <ResponseField name="tier_models.deep" type="string">
+          Model label for the deep tier.
+        </ResponseField>
+      </Expandable>
     </ResponseField>
   </Expandable>
 </ResponseField>
 
 <ResponseField name="lines" type="array">
-  Phone numbers linked to your account.
+  Phone lines assigned to your account.
 
   <Expandable title="lines item fields">
     <ResponseField name="lines[].phone" type="string">
       Phone number in E.164 format.
     </ResponseField>
-    <ResponseField name="lines[].role" type="string">
-      The role of this line (e.g., `"personal"`).
+    <ResponseField name="lines[].platform" type="string">
+      The messaging platform for this line (e.g., `"imessage"`).
     </ResponseField>
   </Expandable>
 </ResponseField>
 
-<ResponseField name="agent_addresses" type="array">
-  Communication addresses managed by your agent (email, messaging handles, etc.).
+<ResponseField name="addresses" type="array">
+  Active communication addresses managed by your agent (email, messaging handles, etc.).
 
-  <Expandable title="agent_addresses item fields">
-    <ResponseField name="agent_addresses[].kind" type="string">
-      Address type — e.g., `"email"`.
-    </ResponseField>
-    <ResponseField name="agent_addresses[].address" type="string">
+  <Expandable title="addresses item fields">
+    <ResponseField name="addresses[].address" type="string">
       The address value — e.g., `"alice@wzrd.tech"`.
+    </ResponseField>
+    <ResponseField name="addresses[].is_primary" type="boolean">
+      Whether this is the primary address for your agent.
     </ResponseField>
   </Expandable>
 </ResponseField>
@@ -268,19 +316,28 @@ console.log(user);
 ```json
 {
   "user": {
-    "id": "uuid",
+    "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
     "username": "alice",
-    "wallet_address": "0x..."
+    "wallet_address": "0xAbC1234567890dEf...",
+    "status": "active",
+    "created_at": "2024-01-15T10:30:00.000Z"
   },
   "entitlement": {
+    "plan": "pro",
     "speed_tier": "balanced",
-    "monthly_cap_usd": 50
+    "monthly_cap_usd": 50,
+    "spend_mtd_usd": 12.40,
+    "tier_models": {
+      "fast": "GPT-4o mini",
+      "balanced": "GPT-4o",
+      "deep": "o3"
+    }
   },
   "lines": [
-    { "phone": "+15551234567", "role": "personal" }
+    { "phone": "+15551234567", "platform": "imessage" }
   ],
-  "agent_addresses": [
-    { "kind": "email", "address": "alice@wzrd.tech" }
+  "addresses": [
+    { "address": "alice@wzrd.tech", "is_primary": true }
   ]
 }
 ```

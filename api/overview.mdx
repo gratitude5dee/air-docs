@@ -26,7 +26,7 @@ Most endpoints accept and return JSON. Set the `Content-Type` header to `applica
 
 Airv authenticates API requests using a **session cookie** (`airv_session`) that is set after you complete the phone OTP login flow. In a browser context the cookie is sent automatically. For server-side or programmatic use, forward it explicitly in the `Cookie` request header.
 
-Some protected endpoints — such as gateway proxy routes — additionally require a per-box `GATEWAY_TOKEN` passed as a bearer token. See the [Authentication](/api/authentication) page for the full login flow and server-side usage examples.
+See the [Authentication](/api/authentication) page for the full login flow and server-side usage examples.
 
 ## Rate Limits & Spend Caps
 
