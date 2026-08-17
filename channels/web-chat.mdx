@@ -1,0 +1,94 @@
+---
+title: "Web Chat: Talk to Your Agent in the Browser"
+sidebarTitle: "Web Chat"
+description: "The Airv web app gives you a full chat interface, decision queue, skills manager, and connector hub — all from your browser at air.wzrd.tech."
+---
+
+The Airv web app at [air.wzrd.tech](https://air.wzrd.tech) is your agent's full control center. Beyond chatting, it's where you manage approvals, install skills, connect integrations, and access your agent's cloud desktop — all from a browser, with no installation required.
+
+## Logging In
+
+Sign in at [air.wzrd.tech](https://air.wzrd.tech) with your phone number. You'll receive a one-time passcode (OTP) via SMS. Enter it and you're in — there's no password to set or reset.
+
+<Note>
+  Use the same phone number associated with your Airv account. If you signed up with a different number than your iMessage number, use the one you registered with.
+</Note>
+
+## The Chat Tab
+
+The Chat tab is a full conversation interface that shares history and context with your iMessage channel.
+
+<CardGroup cols={2}>
+  <Card title="Streaming replies" icon="signal-stream">
+    Responses appear token by token as your agent generates them — the same streaming experience as iMessage, now on a larger screen with selectable text and easy copy.
+  </Card>
+  <Card title="Shared session history" icon="arrows-rotate">
+    Web chat and iMessage run on the same conversation session. Context you established in iMessage appears here, and anything you discuss in the web app is available when you switch back to Messages.
+  </Card>
+  <Card title="Voice input" icon="microphone">
+    Click the mic button to record a voice note up to 5 minutes long (25 MB max). It's transcribed automatically and sent as text, so the chat history stays readable.
+  </Card>
+  <Card title="Creative commands" icon="wand-magic-sparkles">
+    Type a slash command to route directly to the creative pipeline and get back a result card with your generated asset.
+  </Card>
+</CardGroup>
+
+### Creative Slash Commands
+
+| Command | What it does |
+|---|---|
+| `/imagine <description>` | Generates a static image from your description |
+| `/animate <description>` | Generates a short video from your description |
+| `/zap <description>` | Quick-generation shortcut for fast creative output |
+
+<Tip>
+  Be specific in your descriptions. Instead of `/imagine a landscape`, try `/imagine a misty mountain valley at dawn, soft golden light, photorealistic` for much better results.
+</Tip>
+
+## Dashboard Tabs
+
+Every tab in the Airv web app serves a distinct purpose. Here's what each one does:
+
+<CardGroup cols={2}>
+  <Card title="Chat" icon="message">
+    Your primary conversation interface with your agent. Full history, streaming replies, voice input, and creative commands.
+  </Card>
+  <Card title="Needs You" icon="circle-exclamation">
+    Your approval queue. Email drafts, ad copy, content proposals, and any other action your agent has prepared but won't take without your sign-off.
+  </Card>
+  <Card title="People" icon="address-book">
+    Your contact graph and sender trust manager. See who has reached out to your agent, adjust trust tiers, and approve or block senders.
+  </Card>
+  <Card title="Skills" icon="puzzle-piece">
+    Browse and install skills that extend what your agent can do. Manage installed skills and configure their permissions from here.
+  </Card>
+  <Card title="Connectors" icon="plug">
+    Connect external services via OAuth — Gmail, GitHub, and more. Manage which integrations your agent has access to and revoke them at any time.
+  </Card>
+  <Card title="Computer" icon="desktop">
+    A live view of your agent's cloud Ubuntu VM. Watch what it's doing, take manual control, or review recent actions.
+  </Card>
+  <Card title="Wallet" icon="wallet">
+    Your agent's crypto wallet balance and full activity log. Review transactions and manage spending limits.
+  </Card>
+</CardGroup>
+
+## Desktop Pairing
+
+Pair the Airv web app with your local machine for a desktop-native chat experience. Once paired, you can interact with your agent through a native window without keeping a browser tab open.
+
+<Info>
+  Desktop pairing is available for macOS and Windows. Find the pairing option under **Settings → Desktop App** in the web app.
+</Info>
+
+## Session Security
+
+Your session is protected by design, not just by configuration.
+
+- Your session cookie is `httpOnly` — browser JavaScript cannot read or leak it.
+- Box tokens and API keys your agent uses for integrations never appear in the browser. They live server-side inside your agent's secure enclave.
+- OAuth flows redirect through Airv's backend so your raw access tokens are never stored in local storage or visible in network requests from the browser.
+
+<Warning>
+  Never share your session or let someone else use your logged-in browser window. All actions taken in the web app are attributed to you as the account owner.
+</Warning>

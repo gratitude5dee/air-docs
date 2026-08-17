@@ -1,0 +1,77 @@
+---
+title: "iMessage Delivery: How Your Texts Reach Your Agent"
+sidebarTitle: "iMessage"
+description: "Airv receives iMessages via Photon Spectrum webhooks. Each message is verified, deduplicated, and routed to your dedicated agent within seconds."
+---
+
+When you text your Airv number — or when anyone else does — that message travels from Apple's iMessage network through Photon/Spectrum and into Airv before your agent ever sees it. The entire journey is automatic, cryptographically verified, and typically completes in under 15 seconds on a warm agent.
+
+## End-to-end delivery pipeline
+
+<Steps>
+  <Step title="Message sent">
+    You (or another sender) sends a text to your dedicated iMessage number. The message leaves Apple's network and arrives at Photon/Spectrum, Airv's iMessage infrastructure provider.
+  </Step>
+  <Step title="Webhook delivery">
+    Photon/Spectrum packages the message as a signed webhook event and POSTs it to Airv's inbound endpoint.
+  </Step>
+  <Step title="Signature and timestamp verification">
+    Airv verifies the HMAC-SHA256 signature on the request to confirm it originated from Spectrum and hasn't been tampered with. Messages with timestamps older than 5 minutes are rejected outright, protecting against replay attacks.
+  </Step>
+  <Step title="Routing">
+    Airv resolves your phone line to your account and then to your agent. Each number maps to exactly one agent, so there's no ambiguity about where the message goes.
+  </Step>
+  <Step title="Trust tier determination">
+    Airv evaluates the sender's relationship to you. Your own number is Tier 0 (fully trusted). Contacts you've interacted with before are Tier 1. Unknown numbers start at Tier 2 and go through trust-tier gating before reaching your agent. See [Trust Tiers](/concepts/trust-tiers).
+  </Step>
+  <Step title="Deduplication">
+    Airv checks the message ID against its deduplication store. If this ID has already been processed, the delivery is silently discarded. If it's new, processing continues.
+  </Step>
+  <Step title="Acknowledgment">
+    Airv returns `200 OK` to Spectrum immediately. This stops Spectrum from retrying and keeps the delivery pipeline clean.
+  </Step>
+  <Step title="Async agent processing">
+    Your agent wakes up, reads the message (and any attachments), formulates a reply, and streams it back to your number via iMessage. You see the response arrive just like any other text.
+  </Step>
+</Steps>
+
+## Typing indicator
+
+As soon as Airv receives your message and passes it through verification, it sends a typing indicator to your number. You'll see the familiar three-dot bubble appear before your agent has even started working on a reply. This is your confirmation that the message landed successfully.
+
+<Info>
+  The typing indicator is sent during the acknowledgment phase — not after. If you see it, your message is in the queue and your agent will reply.
+</Info>
+
+## Delivery guarantees
+
+<CardGroup cols={2}>
+  <Card title="At-least-once delivery" icon="shield-check">
+    Spectrum retries delivery if Airv returns a 5xx or times out. Airv's deduplication layer ensures your agent still processes the message exactly once, even across retries.
+  </Card>
+  <Card title="Typical latency" icon="clock">
+    Under 15 seconds on a warm agent. Under 60 seconds if your agent VM is cold-starting after a period of inactivity.
+  </Card>
+</CardGroup>
+
+## What happens when something goes wrong
+
+**Airv is temporarily unavailable:** Spectrum holds the delivery and retries with backoff. Once Airv recovers, your message is processed normally. You won't lose it.
+
+**Your VM is rate-limited:** If Airv's start limits are reached, you'll receive an automatic holding message letting you know the reply is on its way. Your agent processes the message as soon as capacity is available, and the real reply follows.
+
+<Warning>
+  Holding messages are a signal that demand on your agent is temporarily high — not that your message was dropped. The reply will arrive.
+</Warning>
+
+## Burst debouncing
+
+If you send multiple texts within roughly 5 seconds of each other, Airv waits for the burst to settle before forwarding anything to your agent. Your agent then sees all of those messages as a single turn and crafts one coherent reply. This prevents your agent from replying mid-thought and sending a fragmented conversation.
+
+<Tip>
+  You can use burst debouncing intentionally. Send your main question, then immediately send a follow-up or correction — your agent will see both and respond to the full picture.
+</Tip>
+
+## Attachment handling
+
+Photos, files, and other attachments sent over iMessage are included in the webhook payload as metadata. Your agent retrieves the actual content automatically using that metadata. You don't need to do anything special — just send the attachment as you normally would.

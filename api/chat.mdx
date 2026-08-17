@@ -1,0 +1,208 @@
+---
+title: "Chat & Run Streaming"
+sidebarTitle: "Chat"
+description: "Send messages to your Airv agent, start run sessions, and stream real-time delta and tool-call events back to your client over Server-Sent Events."
+---
+
+The Chat API is the primary way you interact with your Airv agent. You post a message, receive a run identifier, and then open a long-lived SSE stream to receive incremental events — deltas, tool calls, and completion signals — as your agent works. If your message contains a creative command such as `/imagine`, `/animate`, or `/zap`, the agent routes the request to the creative pipeline instead and returns a `creative_job_id` you can use to stream progress from the creative events endpoint.
+
+<Note>
+  Both endpoints have a **maxDuration of 800 seconds**. Keep your HTTP client and any proxy timeouts set above this value to avoid premature disconnects.
+</Note>
+
+---
+
+## Start a chat run
+
+<ParamField body="message" type="string" required>
+  The message or instruction to send to your agent. Prefix with `/imagine`, `/animate`, or `/zap` to trigger the creative pipeline.
+</ParamField>
+
+<ParamField body="channel" type="string">
+  The originating channel. Pass `"web"` for browser clients. Defaults to `"web"` when omitted.
+</ParamField>
+
+### `POST /api/chat`
+
+Sends a message to your agent and opens a new run. For standard messages the response contains a `run_id` you pass to the SSE endpoint. For creative commands the response contains a `creative_job_id` instead.
+
+<CodeGroup>
+```bash cURL
+curl -s -X POST https://air.wzrd.tech/api/chat \
+  -H "Content-Type: application/json" \
+  --cookie "session=<your-session-cookie>" \
+  -d '{ "message": "Summarise my emails from this morning", "channel": "web" }'
+```
+
+```typescript TypeScript
+const res = await fetch('https://air.wzrd.tech/api/chat', {
+  method: 'POST',
+  credentials: 'include',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    message: 'Summarise my emails from this morning',
+    channel: 'web',
+  }),
+});
+const { run_id } = await res.json();
+```
+</CodeGroup>
+
+**Standard response** — `200 OK`
+
+<ResponseField name="run_id" type="string">
+  Unique identifier for the agent run. Pass this to `GET /api/chat/[runId]/events` to stream events.
+</ResponseField>
+
+```json
+{
+  "run_id": "run_abc123"
+}
+```
+
+---
+
+### Creative commands
+
+When your message starts with `/imagine`, `/animate`, or `/zap`, Airv routes the request to the creative pipeline. The response shape changes to include a `creative_job_id` rather than a `run_id`.
+
+<CodeGroup>
+```bash cURL
+curl -s -X POST https://air.wzrd.tech/api/chat \
+  -H "Content-Type: application/json" \
+  --cookie "session=<your-session-cookie>" \
+  -d '{ "message": "/imagine a sunset over the ocean" }'
+```
+
+```typescript TypeScript
+const res = await fetch('https://air.wzrd.tech/api/chat', {
+  method: 'POST',
+  credentials: 'include',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ message: '/imagine a sunset over the ocean' }),
+});
+const { creative_job_id } = await res.json();
+// then stream /api/creative/{creative_job_id}/events
+```
+</CodeGroup>
+
+**Creative response** — `200 OK`
+
+<ResponseField name="creative_job_id" type="string">
+  Identifier for the creative job. Use this to subscribe to progress events on the `/api/creative/{creative_job_id}/events` SSE stream.
+</ResponseField>
+
+```json
+{
+  "creative_job_id": "cjob_xyz789"
+}
+```
+
+---
+
+## Stream run events
+
+### `GET /api/chat/[runId]/events`
+
+Opens a Server-Sent Events stream for the given run. The response is `Content-Type: text/event-stream`. Each `data:` line contains a JSON object describing an incremental event emitted by your agent.
+
+<ParamField path="runId" type="string" required>
+  The `run_id` returned by `POST /api/chat`.
+</ParamField>
+
+<Tip>
+  Use `EventSource` in the browser with `withCredentials: true` so the session cookie is forwarded automatically. In Node.js or server environments, use an SSE-capable HTTP client and attach the cookie manually.
+</Tip>
+
+<CodeGroup>
+```typescript TypeScript (Browser)
+const eventSource = new EventSource(
+  'https://air.wzrd.tech/api/chat/run_abc123/events',
+  { withCredentials: true }
+);
+
+eventSource.onmessage = (event) => {
+  const data = JSON.parse(event.data);
+  // handle delta, tool_call, etc.
+};
+
+eventSource.onerror = (err) => {
+  console.error('Stream error', err);
+  eventSource.close();
+};
+```
+
+```typescript TypeScript (Node.js)
+import { fetchEventSource } from '@microsoft/fetch-event-source';
+
+await fetchEventSource('https://air.wzrd.tech/api/chat/run_abc123/events', {
+  credentials: 'include',
+  headers: { Cookie: 'session=<your-session-cookie>' },
+  onmessage(event) {
+    const data = JSON.parse(event.data);
+    console.log(data);
+  },
+});
+```
+
+```bash cURL
+curl -N \
+  -H "Accept: text/event-stream" \
+  --cookie "session=<your-session-cookie>" \
+  https://air.wzrd.tech/api/chat/run_abc123/events
+```
+</CodeGroup>
+
+**Event shapes**
+
+Each `data:` payload is a JSON object. Common event types include:
+
+<ResponseField name="type" type="string">
+  The event type. Examples: `"delta"`, `"tool_call"`, `"tool_result"`, `"done"`, `"error"`.
+</ResponseField>
+
+<ResponseField name="content" type="string">
+  Present on `delta` events. Contains the incremental text fragment produced by the agent.
+</ResponseField>
+
+<ResponseField name="tool" type="string">
+  Present on `tool_call` events. The name of the tool the agent is invoking.
+</ResponseField>
+
+<ResponseField name="input" type="object">
+  Present on `tool_call` events. The arguments passed to the tool.
+</ResponseField>
+
+<ResponseField name="output" type="any">
+  Present on `tool_result` events. The value returned by the tool.
+</ResponseField>
+
+**Example stream**
+
+```text
+data: {"type":"delta","content":"Sure, here are your emails"}
+
+data: {"type":"tool_call","tool":"list_emails","input":{"since":"2024-06-01T08:00:00Z"}}
+
+data: {"type":"tool_result","tool":"list_emails","output":[{"subject":"Q3 report","from":"alice@example.com"}]}
+
+data: {"type":"delta","content":" from this morning:\n\n1. Q3 report — alice@example.com"}
+
+data: {"type":"done"}
+```
+
+---
+
+## Error cases
+
+| Status | Meaning |
+|--------|---------|
+| `400` | Request body is missing or malformed. Check that `message` is a non-empty string. |
+| `401` | No valid session cookie. Complete phone OTP authentication first. |
+| `404` | The `runId` does not exist or does not belong to your account. |
+| `408` / stream close | The run exceeded the 800-second maxDuration. Reconnect or start a new run. |
+| `500` | Internal error. Retry with exponential back-off. |
+
+<Warning>
+  Proxies and load balancers often impose their own read timeouts. If your stream drops unexpectedly, verify that no intermediary is closing idle connections before the 800-second limit.
+</Warning>

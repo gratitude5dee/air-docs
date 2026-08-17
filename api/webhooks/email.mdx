@@ -1,0 +1,81 @@
+---
+title: "Email Delivery: How Emails Reach Your Agent"
+sidebarTitle: "Email"
+description: "Emails to your @wzrd.tech address are delivered via AgentMail webhooks, verified with Svix signatures, and processed once by your agent."
+---
+
+Every email sent to your `@wzrd.tech` address is captured by AgentMail and delivered to Airv as a cryptographically signed webhook event. Your agent reads it, strips out quoted thread history so it only sees the new content, and drafts a reply — which you approve before anything is sent. Nothing leaves your inbox without your sign-off.
+
+## End-to-end delivery pipeline
+
+<Steps>
+  <Step title="Email arrives">
+    Someone sends a message to `<username>@wzrd.tech`. AgentMail receives it on your behalf and queues it for delivery to Airv.
+  </Step>
+  <Step title="Webhook delivery">
+    AgentMail emits a `message.received` webhook event, signed by Svix, and POSTs it to Airv's inbound email endpoint.
+  </Step>
+  <Step title="Signature verification">
+    Airv verifies the Svix signature headers on the request. Any event that fails verification is rejected immediately and never forwarded to your agent.
+  </Step>
+  <Step title="Routing">
+    Airv resolves the recipient address to your account and your agent. Each `@wzrd.tech` address maps to exactly one account.
+  </Step>
+  <Step title="Trust tier determination">
+    Airv evaluates the sender's relationship to you and assigns a trust tier before your agent engages. See [Trust Tiers](/concepts/trust-tiers).
+  </Step>
+  <Step title="Deduplication">
+    Airv checks the message ID. If this email has already been processed (because AgentMail retried delivery), the duplicate is silently discarded.
+  </Step>
+  <Step title="Acknowledgment">
+    Airv returns `200 OK` to AgentMail immediately, preventing spurious retries.
+  </Step>
+  <Step title="Async agent processing">
+    Your agent reads the email, strips quoted history from the thread so it only processes the new content, and creates a draft reply.
+  </Step>
+  <Step title="Draft appears for your review">
+    The draft shows up in your **Needs You** queue. You review it, make any edits, and approve it. Only then does Airv send it on your behalf.
+  </Step>
+</Steps>
+
+<Note>
+  Your agent's email key is draft-only. It can compose and stage replies, but it cannot send email autonomously. Every outbound email requires your explicit approval in **Needs You** before it leaves your account.
+</Note>
+
+## Delivery guarantees
+
+Svix provides at-least-once delivery with automatic retries if Airv returns a 5xx or times out. Because Airv deduplicates by message ID, your agent still processes each email exactly once regardless of how many times Svix attempts delivery.
+
+## Thread handling
+
+When your agent replies to an email, Airv preserves the correct threading headers (`In-Reply-To` and `References`) so the reply lands in the right thread in every major email client — including Gmail and Apple Mail. Quoted history is stripped before the message reaches your agent's context, so your agent reads only what's new in each turn, not the entire thread accumulating over time.
+
+<Info>
+  Thread-aware context stripping keeps your agent's responses focused and prevents it from re-reading content it has already processed.
+</Info>
+
+## Retired address routing
+
+If you change your Airv username, your old `@wzrd.tech` address continues routing mail to you — it doesn't stop working. Anyone who has your old address in their contacts will still reach you without interruption. You can update people at your own pace.
+
+## CC and forwarding
+
+If you CC your agent's `@wzrd.tech` address on an email thread with other people, your agent joins that thread as a participant. It reads the messages addressed to the group and can draft replies that are part of the ongoing conversation — useful when you want your agent to handle correspondence with a third party on your behalf.
+
+<Tip>
+  CCing your agent into a vendor or service thread is a good way to let it manage back-and-forth communication while you stay informed without having to respond manually.
+</Tip>
+
+## Reply flow at a glance
+
+<CardGroup cols={3}>
+  <Card title="Agent drafts" icon="pen-to-square">
+    Your agent reads the email and composes a reply based on your context and preferences.
+  </Card>
+  <Card title="You review" icon="eye">
+    The draft appears in **Needs You**. You can read it, edit it, or discard it.
+  </Card>
+  <Card title="Airv sends" icon="paper-plane">
+    Once you approve, Airv sends the reply with correct threading headers on your behalf.
+  </Card>
+</CardGroup>

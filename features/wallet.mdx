@@ -1,0 +1,61 @@
+---
+title: "Your Agent's Crypto Wallet"
+sidebarTitle: "Wallet"
+description: "Each Airv account includes a crypto wallet tied to your phone number. View your balance, fund it with a QR code, and approve transactions from Needs You."
+---
+
+Every Airv account comes with a non-custodial crypto wallet, created automatically when you verify your phone number during onboarding. Your wallet is your agent's financial instrument — it can interact with EVM and Solana chains on your behalf, hold tokens, and execute on-chain transactions. You stay in control: nothing leaves your wallet without your explicit approval.
+
+## How your wallet is created
+
+Your wallet is provisioned at the moment you complete phone OTP verification during onboarding, powered by **thirdweb**'s infrastructure. Your phone number is the root of trust — it's what ties the wallet to you, and it's what you use to recover access if you ever need to.
+
+Airv never holds your private keys. The wallet lives in thirdweb's non-custodial infrastructure, and your VM is granted only a **scoped credential** — one that can request a signature on your behalf, but cannot produce one unilaterally.
+
+## What you can do with your wallet
+
+<CardGroup cols={2}>
+  <Card title="View your balance" icon="coins">
+    See your current token holdings across all supported chains, updated in real time.
+  </Card>
+  <Card title="Fund your wallet" icon="qrcode">
+    Scan the QR code in the Wallet tab from any wallet app or exchange to send funds to your address.
+  </Card>
+  <Card title="Transaction history" icon="clock-rotate-left">
+    Review a full log of every transaction — inbound and outbound — with timestamps and chain details.
+  </Card>
+  <Card title="Agent-initiated actions" icon="robot">
+    Your agent can interact with blockchain tools (swaps, contract calls, transfers) using your wallet — with your approval for every action.
+  </Card>
+</CardGroup>
+
+## Approval gates
+
+Your agent can propose on-chain transactions, but it cannot execute them without your sign-off. Every transaction your agent initiates appears in **Needs You** — you see the amount, destination address, chain, and the reason your agent is requesting it before anything happens.
+
+This applies to every on-chain action: transfers, contract interactions, swaps, and any other wallet operation.
+
+<Info>
+  Your agent never has unilateral access to your funds. The scoped credential your VM holds can queue a transaction for your review, but the signature that executes it requires your explicit approval.
+</Info>
+
+## The Wallet tab
+
+Open the **Wallet** section in the web app to access everything in one place:
+
+- Your **current balance** and token breakdown by chain
+- Your **QR funding code** — display it to receive funds from any external wallet or exchange
+- Your **full transaction history**, filterable by chain and date
+
+<Warning>
+  Do not share your wallet QR code publicly. It exposes your wallet address, which anyone can use to send you funds — but also allows others to track your on-chain activity. Share it only with people or services you trust.
+</Warning>
+
+## Security model
+
+Airv's wallet infrastructure is built around a few key principles:
+
+- **Non-custodial**: Airv never holds your private keys. Recovery is always possible through your verified phone number via thirdweb.
+- **Scoped VM access**: your VM receives only a credential that can request a signature — not one that can produce one. Your agent must route every transaction through the approval flow.
+- **No raw keys in your environment**: your private key is never written to your VM's filesystem, logged, or transmitted through Airv's servers.
+- **Phone-based recovery**: if you lose access, thirdweb's phone-based recovery flow re-verifies your identity before restoring wallet access.

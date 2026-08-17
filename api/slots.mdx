@@ -1,0 +1,397 @@
+---
+title: "Content Slots & Scheduling"
+sidebarTitle: "Slots"
+description: "Schedule, reschedule, cancel, and immediately publish content slots across platforms, with real-time per-lane cap headroom tracking."
+---
+
+Slots represent scheduled publishing events — a piece of content lined up to go live on a specific platform account at a specific time. The Slots API lets you list everything in your schedule along with how much headroom remains in each platform lane's publishing cap, create new slots by specifying either a UTC timestamp or a local time with timezone, adjust timing, cancel slots before they fire, and publish a slot immediately without waiting for its scheduled time. Immediate publishes can take up to 300 seconds if the underlying publishing box needs to start.
+
+<Note>
+  Your slot list is capped at **200 items**. The `GET /api/slots` response includes per-lane cap headroom so you can see how many more slots each platform lane can absorb.
+</Note>
+
+---
+
+## List slots
+
+### `GET /api/slots`
+
+Returns up to 200 slots across all your platform accounts, plus a `lane_headroom` map showing remaining capacity per lane.
+
+<CodeGroup>
+```bash cURL
+curl -s https://air.wzrd.tech/api/slots \
+  --cookie "session=<your-session-cookie>"
+```
+
+```typescript TypeScript
+const res = await fetch('https://air.wzrd.tech/api/slots', {
+  credentials: 'include',
+});
+const { slots, lane_headroom } = await res.json();
+```
+</CodeGroup>
+
+**Response** — `200 OK`
+
+<ResponseField name="slots" type="array">
+  Array of slot objects, up to 200.
+</ResponseField>
+
+<ResponseField name="slots[].id" type="string">
+  Unique slot identifier.
+</ResponseField>
+
+<ResponseField name="slots[].platform" type="string">
+  The target publishing platform, e.g. `"twitter"`, `"instagram"`, `"linkedin"`.
+</ResponseField>
+
+<ResponseField name="slots[].account_ref" type="string">
+  Reference to the connected account to publish from.
+</ResponseField>
+
+<ResponseField name="slots[].package_ref" type="string">
+  Reference to the content package or asset bundle to publish.
+</ResponseField>
+
+<ResponseField name="slots[].status" type="string">
+  Current slot status. One of `"scheduled"`, `"proposed"`, `"parked"`, `"published"`, `"cancelled"`, `"failed"`.
+</ResponseField>
+
+<ResponseField name="slots[].scheduled_at" type="string">
+  UTC ISO 8601 timestamp of the scheduled publish time.
+</ResponseField>
+
+<ResponseField name="lane_headroom" type="object">
+  A map of `platform → remaining_slots` showing how many more slots each lane can absorb before hitting its cap.
+</ResponseField>
+
+```json
+{
+  "slots": [
+    {
+      "id": "slt_001",
+      "platform": "twitter",
+      "account_ref": "acct_tw01",
+      "package_ref": "pkg_abc",
+      "status": "scheduled",
+      "scheduled_at": "2024-06-12T14:00:00Z"
+    },
+    {
+      "id": "slt_002",
+      "platform": "instagram",
+      "account_ref": "acct_ig01",
+      "package_ref": "pkg_def",
+      "status": "proposed",
+      "scheduled_at": "2024-06-13T09:00:00Z"
+    }
+  ],
+  "lane_headroom": {
+    "twitter": 8,
+    "instagram": 5,
+    "linkedin": 12
+  }
+}
+```
+
+---
+
+## Schedule a new slot
+
+### `POST /api/slots`
+
+Creates a new content slot. You can specify the publish time as a UTC ISO 8601 timestamp, or as a local time string paired with a timezone identifier — Airv converts local time to UTC for you.
+
+<ParamField body="platform" type="string" required>
+  The target platform slug, e.g. `"twitter"`, `"instagram"`, `"linkedin"`.
+</ParamField>
+
+<ParamField body="account_ref" type="string" required>
+  The account reference identifying which connected account to post from.
+</ParamField>
+
+<ParamField body="package_ref" type="string" required>
+  The content package or asset bundle reference to publish.
+</ParamField>
+
+<ParamField body="scheduled_at" type="string">
+  UTC ISO 8601 datetime string, e.g. `"2024-06-12T14:00:00Z"`. Use this **or** the `local_time` + `timezone` pair, not both.
+</ParamField>
+
+<ParamField body="local_time" type="string">
+  Local time in `YYYY-MM-DDTHH:mm:ss` format, e.g. `"2024-06-12T09:00:00"`. Must be paired with `timezone`.
+</ParamField>
+
+<ParamField body="timezone" type="string">
+  IANA timezone identifier, e.g. `"America/New_York"`, `"Europe/London"`. Required when using `local_time`.
+</ParamField>
+
+<CodeGroup>
+```bash cURL (UTC timestamp)
+curl -s -X POST https://air.wzrd.tech/api/slots \
+  -H "Content-Type: application/json" \
+  --cookie "session=<your-session-cookie>" \
+  -d '{
+    "platform": "twitter",
+    "account_ref": "acct_tw01",
+    "package_ref": "pkg_abc",
+    "scheduled_at": "2024-06-12T14:00:00Z"
+  }'
+```
+
+```bash cURL (local time)
+curl -s -X POST https://air.wzrd.tech/api/slots \
+  -H "Content-Type: application/json" \
+  --cookie "session=<your-session-cookie>" \
+  -d '{
+    "platform": "instagram",
+    "account_ref": "acct_ig01",
+    "package_ref": "pkg_def",
+    "local_time": "2024-06-12T09:00:00",
+    "timezone": "America/New_York"
+  }'
+```
+
+```typescript TypeScript (UTC timestamp)
+const res = await fetch('https://air.wzrd.tech/api/slots', {
+  method: 'POST',
+  credentials: 'include',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    platform: 'twitter',
+    account_ref: 'acct_tw01',
+    package_ref: 'pkg_abc',
+    scheduled_at: '2024-06-12T14:00:00Z',
+  }),
+});
+const slot = await res.json();
+```
+
+```typescript TypeScript (local time)
+const res = await fetch('https://air.wzrd.tech/api/slots', {
+  method: 'POST',
+  credentials: 'include',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    platform: 'instagram',
+    account_ref: 'acct_ig01',
+    package_ref: 'pkg_def',
+    local_time: '2024-06-12T09:00:00',
+    timezone: 'America/New_York',
+  }),
+});
+const slot = await res.json();
+```
+</CodeGroup>
+
+**Response** — `200 OK`
+
+<ResponseField name="id" type="string">
+  Unique identifier for the newly created slot.
+</ResponseField>
+
+<ResponseField name="status" type="string">
+  Initial status of the slot, typically `"scheduled"`.
+</ResponseField>
+
+<ResponseField name="scheduled_at" type="string">
+  Resolved UTC ISO 8601 publish time (converted from local time if necessary).
+</ResponseField>
+
+```json
+{
+  "id": "slt_003",
+  "platform": "instagram",
+  "account_ref": "acct_ig01",
+  "package_ref": "pkg_def",
+  "status": "scheduled",
+  "scheduled_at": "2024-06-12T13:00:00Z"
+}
+```
+
+---
+
+## Reschedule a slot
+
+### `PATCH /api/slots/[id]`
+
+Updates the scheduled publish time for an existing slot. You can pass either a UTC `scheduled_at` timestamp or a `local_time` + `timezone` pair. Slots with status `"proposed"` remain in `"proposed"` state after rescheduling; they do not automatically become `"scheduled"`.
+
+<ParamField path="id" type="string" required>
+  The slot ID to reschedule.
+</ParamField>
+
+<ParamField body="scheduled_at" type="string">
+  New UTC ISO 8601 datetime string. Use this **or** `local_time` + `timezone`, not both.
+</ParamField>
+
+<ParamField body="local_time" type="string">
+  New local time in `YYYY-MM-DDTHH:mm:ss` format. Must be paired with `timezone`.
+</ParamField>
+
+<ParamField body="timezone" type="string">
+  IANA timezone identifier. Required when using `local_time`.
+</ParamField>
+
+<CodeGroup>
+```bash cURL
+curl -s -X PATCH https://air.wzrd.tech/api/slots/slt_001 \
+  -H "Content-Type: application/json" \
+  --cookie "session=<your-session-cookie>" \
+  -d '{ "scheduled_at": "2024-06-13T16:00:00Z" }'
+```
+
+```typescript TypeScript
+const res = await fetch('https://air.wzrd.tech/api/slots/slt_001', {
+  method: 'PATCH',
+  credentials: 'include',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ scheduled_at: '2024-06-13T16:00:00Z' }),
+});
+const slot = await res.json();
+```
+</CodeGroup>
+
+**Response** — `200 OK` — returns the updated slot object.
+
+```json
+{
+  "id": "slt_001",
+  "platform": "twitter",
+  "account_ref": "acct_tw01",
+  "package_ref": "pkg_abc",
+  "status": "scheduled",
+  "scheduled_at": "2024-06-13T16:00:00Z"
+}
+```
+
+<Note>
+  Rescheduling a `"proposed"` slot does **not** promote it to `"scheduled"`. Its status stays `"proposed"` until you explicitly confirm it via your workflow.
+</Note>
+
+---
+
+## Cancel a slot
+
+### `DELETE /api/slots/[id]`
+
+Cancels a slot, preventing it from being published at its scheduled time. You can only cancel slots in `"scheduled"`, `"parked"`, or `"proposed"` status. Slots that have already been `"published"` or `"failed"` cannot be cancelled.
+
+<ParamField path="id" type="string" required>
+  The slot ID to cancel.
+</ParamField>
+
+<CodeGroup>
+```bash cURL
+curl -s -X DELETE https://air.wzrd.tech/api/slots/slt_001 \
+  --cookie "session=<your-session-cookie>"
+```
+
+```typescript TypeScript
+const res = await fetch('https://air.wzrd.tech/api/slots/slt_001', {
+  method: 'DELETE',
+  credentials: 'include',
+});
+const result = await res.json();
+```
+</CodeGroup>
+
+**Response** — `200 OK`
+
+<ResponseField name="id" type="string">
+  The ID of the cancelled slot.
+</ResponseField>
+
+<ResponseField name="status" type="string">
+  Always `"cancelled"` on success.
+</ResponseField>
+
+```json
+{
+  "id": "slt_001",
+  "status": "cancelled"
+}
+```
+
+---
+
+## Publish immediately
+
+### `POST /api/slots/[id]/publish`
+
+Publishes a slot right now, bypassing its scheduled time. If the publishing box is already warm the response arrives synchronously with the outcome. If the box needs to cold-start first, the server returns `202 Accepted` and continues working in the background — poll the slot status or listen for events to confirm completion. This operation has a maxDuration of 300 seconds.
+
+<ParamField path="id" type="string" required>
+  The slot ID to publish immediately.
+</ParamField>
+
+<CodeGroup>
+```bash cURL
+curl -s -X POST https://air.wzrd.tech/api/slots/slt_001/publish \
+  --cookie "session=<your-session-cookie>"
+```
+
+```typescript TypeScript
+const res = await fetch('https://air.wzrd.tech/api/slots/slt_001/publish', {
+  method: 'POST',
+  credentials: 'include',
+});
+
+if (res.status === 202) {
+  // Box is starting — poll or wait for an event
+  console.log('Publishing in progress, check back shortly.');
+} else {
+  const { outcome, slot } = await res.json();
+  console.log(outcome, slot);
+}
+```
+</CodeGroup>
+
+**Response — synchronous** — `200 OK`
+
+<ResponseField name="outcome" type="string">
+  Result of the publish attempt, e.g. `"published"` or `"failed"`.
+</ResponseField>
+
+<ResponseField name="slot" type="object">
+  The updated slot object reflecting the post-publish state.
+</ResponseField>
+
+```json
+{
+  "outcome": "published",
+  "slot": {
+    "id": "slt_001",
+    "platform": "twitter",
+    "account_ref": "acct_tw01",
+    "package_ref": "pkg_abc",
+    "status": "published",
+    "scheduled_at": "2024-06-12T14:00:00Z"
+  }
+}
+```
+
+**Response — box starting** — `202 Accepted`
+
+```json
+{
+  "message": "Publishing box is starting. The slot will be published shortly."
+}
+```
+
+---
+
+## Error cases
+
+| Status | Meaning |
+|--------|---------|
+| `400` | Missing required fields, or both `scheduled_at` and `local_time` were supplied together. |
+| `401` | Session cookie is missing or expired. |
+| `404` | No slot with the given ID exists in your account. |
+| `409` | `DELETE`: the slot is already `"published"`, `"cancelled"`, or `"failed"` and cannot be cancelled. |
+| `504` | Immediate publish timed out after 300 seconds. Check the slot status manually. |
+| `500` | Internal error. |
+
+<Warning>
+  Immediate publish (`POST /api/slots/[id]/publish`) charges credits against your wallet at the moment of publish, not at the originally scheduled time. Ensure your balance is sufficient before calling this endpoint.
+</Warning>

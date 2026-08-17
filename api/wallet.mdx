@@ -1,0 +1,187 @@
+---
+title: "Wallet & Transactions"
+sidebarTitle: "Wallet"
+description: "Retrieve your Airv wallet balance and a scannable QR code for topping up credits, then browse your complete transaction activity history."
+---
+
+The Wallet API gives you a live view of your Airv credit balance and a ready-to-display QR code for topping up, plus a pageable transaction history so you can reconcile spending across agent tasks, creative jobs, and slot publishes. Both endpoints are privately cached for 60 seconds, so you can poll them freely from a dashboard without hammering the server.
+
+<Note>
+  Both wallet endpoints use `Cache-Control: private, max-age=60`. Your browser or HTTP client will return a cached response for up to 60 seconds before making a fresh network request.
+</Note>
+
+---
+
+## Get wallet summary
+
+### `GET /api/wallet`
+
+Returns your current balance details and a data URL for a QR code that users can scan to top up their wallet.
+
+<CodeGroup>
+```bash cURL
+curl -s https://air.wzrd.tech/api/wallet \
+  --cookie "session=<your-session-cookie>"
+```
+
+```typescript TypeScript
+const res = await fetch('https://air.wzrd.tech/api/wallet', {
+  credentials: 'include',
+});
+const { balance, qr_data_url } = await res.json();
+```
+</CodeGroup>
+
+**Response** — `200 OK`
+
+<ResponseField name="balance" type="object">
+  An object describing your current wallet state.
+</ResponseField>
+
+<ResponseField name="balance.available" type="number">
+  The number of credits currently available to spend.
+</ResponseField>
+
+<ResponseField name="balance.currency" type="string">
+  The currency or credit unit label, e.g. `"ARC"`.
+</ResponseField>
+
+<ResponseField name="balance.lifetime_topped_up" type="number">
+  Total credits ever added to this wallet across all top-ups.
+</ResponseField>
+
+<ResponseField name="balance.lifetime_spent" type="number">
+  Total credits ever consumed by agent tasks, creative jobs, and slot operations.
+</ResponseField>
+
+<ResponseField name="qr_data_url" type="string">
+  A base64-encoded `data:image/png;base64,...` string you can set directly as the `src` of an `<img>` tag. Displays a QR code the user can scan to add credits.
+</ResponseField>
+
+```json
+{
+  "balance": {
+    "available": 4200,
+    "currency": "ARC",
+    "lifetime_topped_up": 10000,
+    "lifetime_spent": 5800
+  },
+  "qr_data_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA..."
+}
+```
+
+**Displaying the QR code**
+
+```typescript TypeScript
+const res = await fetch('https://air.wzrd.tech/api/wallet', {
+  credentials: 'include',
+});
+const { qr_data_url } = await res.json();
+
+// In a React component:
+// <img src={qr_data_url} alt="Scan to top up your Airv wallet" />
+```
+
+---
+
+## Get transaction activity
+
+### `GET /api/wallet/activity`
+
+Returns your transaction history in reverse-chronological order. Each entry records a credit debit or top-up along with the context that triggered it.
+
+<CodeGroup>
+```bash cURL
+curl -s https://air.wzrd.tech/api/wallet/activity \
+  --cookie "session=<your-session-cookie>"
+```
+
+```typescript TypeScript
+const res = await fetch('https://air.wzrd.tech/api/wallet/activity', {
+  credentials: 'include',
+});
+const { transactions } = await res.json();
+```
+</CodeGroup>
+
+**Response** — `200 OK`
+
+<ResponseField name="transactions" type="array">
+  Array of transaction objects, most recent first.
+</ResponseField>
+
+<ResponseField name="transactions[].id" type="string">
+  Unique transaction identifier.
+</ResponseField>
+
+<ResponseField name="transactions[].type" type="string">
+  Transaction type. One of `"debit"` (credit consumed) or `"credit"` (top-up received).
+</ResponseField>
+
+<ResponseField name="transactions[].amount" type="number">
+  The number of credits involved. Always positive; use `type` to determine direction.
+</ResponseField>
+
+<ResponseField name="transactions[].currency" type="string">
+  The credit unit label, matching the `balance.currency` value.
+</ResponseField>
+
+<ResponseField name="transactions[].description" type="string">
+  Human-readable description of what triggered the transaction, e.g. `"Creative job cjob_xyz789"`, `"Slot publish slt_001"`, `"Top-up via QR"`.
+</ResponseField>
+
+<ResponseField name="transactions[].balance_after" type="number">
+  Your wallet balance immediately after this transaction was applied.
+</ResponseField>
+
+<ResponseField name="transactions[].created_at" type="string">
+  ISO 8601 timestamp.
+</ResponseField>
+
+```json
+{
+  "transactions": [
+    {
+      "id": "txn_009",
+      "type": "debit",
+      "amount": 50,
+      "currency": "ARC",
+      "description": "Creative job cjob_xyz789",
+      "balance_after": 4200,
+      "created_at": "2024-06-10T11:30:00Z"
+    },
+    {
+      "id": "txn_008",
+      "type": "credit",
+      "amount": 1000,
+      "currency": "ARC",
+      "description": "Top-up via QR",
+      "balance_after": 4250,
+      "created_at": "2024-06-10T09:00:00Z"
+    },
+    {
+      "id": "txn_007",
+      "type": "debit",
+      "amount": 10,
+      "currency": "ARC",
+      "description": "Slot publish slt_001",
+      "balance_after": 3250,
+      "created_at": "2024-06-09T18:45:00Z"
+    }
+  ]
+}
+```
+
+---
+
+## Error cases
+
+| Status | Meaning |
+|--------|---------|
+| `401` | Session cookie is missing or expired. Re-authenticate via phone OTP. |
+| `404` | No wallet exists for this account yet. Complete onboarding to initialise one. |
+| `500` | Internal error. Retry after a short delay. |
+
+<Tip>
+  Both endpoints respect the `Cache-Control: private, max-age=60` header. If you need up-to-the-second balance data — for example, immediately after a slot publish — wait 60 seconds or send a `Cache-Control: no-cache` request header to bypass the cache.
+</Tip>

@@ -1,0 +1,289 @@
+---
+title: "Creative Assets"
+sidebarTitle: "Assets"
+description: "Manage your creative asset library — list all files, ingest assets from Box, inspect individual records, and revoke active deliveries."
+---
+
+The Assets API gives you full control over the creative files your Airv agent generates and stores. You can list everything in your library, pull in assets from Box to make them available to the agent, fetch a single asset along with its active delivery URLs, or revoke all deliveries for an asset when you want to retire it. Delivery URLs are short-lived by design; request a fresh one any time you need to share or embed an asset.
+
+<Note>
+  Your library holds up to **200 assets**. The `GET /api/assets` list endpoint caps its response at 200 items. If you need finer-grained access, fetch individual assets by ID.
+</Note>
+
+---
+
+## List assets
+
+### `GET /api/assets`
+
+Returns up to 200 creative assets in your library, ordered by creation date descending. Each object includes basic metadata but not the full delivery list — use `GET /api/assets/[id]` for that.
+
+<CodeGroup>
+```bash cURL
+curl -s https://air.wzrd.tech/api/assets \
+  --cookie "session=<your-session-cookie>"
+```
+
+```typescript TypeScript
+const res = await fetch('https://air.wzrd.tech/api/assets', {
+  credentials: 'include',
+});
+const { assets } = await res.json();
+```
+</CodeGroup>
+
+**Response** — `200 OK`
+
+<ResponseField name="assets" type="array">
+  Array of asset summary objects (up to 200).
+</ResponseField>
+
+<ResponseField name="assets[].id" type="string">
+  Unique asset identifier.
+</ResponseField>
+
+<ResponseField name="assets[].filename" type="string">
+  Original filename of the asset.
+</ResponseField>
+
+<ResponseField name="assets[].mime_type" type="string">
+  MIME type, e.g. `"image/png"`, `"video/mp4"`.
+</ResponseField>
+
+<ResponseField name="assets[].purpose" type="string">
+  The purpose tag provided at ingest time, if any.
+</ResponseField>
+
+<ResponseField name="assets[].created_at" type="string">
+  ISO 8601 timestamp of when the asset was added to your library.
+</ResponseField>
+
+```json
+{
+  "assets": [
+    {
+      "id": "ast_001",
+      "filename": "sunset_ocean.png",
+      "mime_type": "image/png",
+      "purpose": "social_post",
+      "created_at": "2024-06-10T10:00:00Z"
+    },
+    {
+      "id": "ast_002",
+      "filename": "product_reel.mp4",
+      "mime_type": "video/mp4",
+      "purpose": "ad",
+      "created_at": "2024-06-09T14:30:00Z"
+    }
+  ]
+}
+```
+
+---
+
+## Ingest a Box asset
+
+### `POST /api/assets`
+
+Pulls an asset from Box into your Airv library and returns the asset object with a short-TTL `delivery_url` you can use immediately. This operation can take up to 300 seconds for large files.
+
+<ParamField body="box_asset_id" type="string" required>
+  The Box file ID to ingest. You can find this in the Box UI or via the Box API.
+</ParamField>
+
+<ParamField body="purpose" type="string">
+  An optional tag describing how the asset will be used, e.g. `"social_post"`, `"ad"`, `"thumbnail"`. Helps the agent contextualise the file.
+</ParamField>
+
+<CodeGroup>
+```bash cURL
+curl -s -X POST https://air.wzrd.tech/api/assets \
+  -H "Content-Type: application/json" \
+  --cookie "session=<your-session-cookie>" \
+  -d '{ "box_asset_id": "1234567890", "purpose": "social_post" }'
+```
+
+```typescript TypeScript
+const res = await fetch('https://air.wzrd.tech/api/assets', {
+  method: 'POST',
+  credentials: 'include',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ box_asset_id: '1234567890', purpose: 'social_post' }),
+});
+const asset = await res.json();
+```
+</CodeGroup>
+
+**Response** — `200 OK`
+
+<ResponseField name="id" type="string">
+  Unique identifier for the newly ingested asset.
+</ResponseField>
+
+<ResponseField name="filename" type="string">
+  Filename as stored in Box.
+</ResponseField>
+
+<ResponseField name="mime_type" type="string">
+  Detected MIME type.
+</ResponseField>
+
+<ResponseField name="purpose" type="string">
+  The purpose tag you provided, if any.
+</ResponseField>
+
+<ResponseField name="delivery_url" type="string">
+  A short-lived URL you can use to download or embed the asset right now. Expires quickly — do not persist this value.
+</ResponseField>
+
+<ResponseField name="created_at" type="string">
+  ISO 8601 timestamp.
+</ResponseField>
+
+```json
+{
+  "id": "ast_003",
+  "filename": "brand_logo.svg",
+  "mime_type": "image/svg+xml",
+  "purpose": "social_post",
+  "delivery_url": "https://cdn.air.wzrd.tech/deliver/ast_003?token=eyJhb...&exp=1718012800",
+  "created_at": "2024-06-10T11:05:00Z"
+}
+```
+
+<Warning>
+  The `delivery_url` is short-lived. If you need a fresh URL later, call `GET /api/assets/[id]` to generate a new one.
+</Warning>
+
+---
+
+## Get asset detail
+
+### `GET /api/assets/[id]`
+
+Returns full metadata for a single asset, including all currently active deliveries with fresh short-TTL URLs.
+
+<ParamField path="id" type="string" required>
+  The asset ID, as returned by `GET /api/assets` or `POST /api/assets`.
+</ParamField>
+
+<CodeGroup>
+```bash cURL
+curl -s https://air.wzrd.tech/api/assets/ast_001 \
+  --cookie "session=<your-session-cookie>"
+```
+
+```typescript TypeScript
+const res = await fetch('https://air.wzrd.tech/api/assets/ast_001', {
+  credentials: 'include',
+});
+const asset = await res.json();
+```
+</CodeGroup>
+
+**Response** — `200 OK`
+
+<ResponseField name="id" type="string">
+  Asset identifier.
+</ResponseField>
+
+<ResponseField name="filename" type="string">
+  Original filename.
+</ResponseField>
+
+<ResponseField name="mime_type" type="string">
+  MIME type.
+</ResponseField>
+
+<ResponseField name="purpose" type="string">
+  Purpose tag.
+</ResponseField>
+
+<ResponseField name="deliveries" type="array">
+  List of active delivery objects, each with a fresh short-TTL `delivery_url`.
+</ResponseField>
+
+<ResponseField name="deliveries[].delivery_url" type="string">
+  A freshly generated short-lived download URL.
+</ResponseField>
+
+<ResponseField name="deliveries[].expires_at" type="string">
+  ISO 8601 timestamp when this delivery URL expires.
+</ResponseField>
+
+<ResponseField name="created_at" type="string">
+  ISO 8601 timestamp of original ingest.
+</ResponseField>
+
+```json
+{
+  "id": "ast_001",
+  "filename": "sunset_ocean.png",
+  "mime_type": "image/png",
+  "purpose": "social_post",
+  "deliveries": [
+    {
+      "delivery_url": "https://cdn.air.wzrd.tech/deliver/ast_001?token=eyJhb...&exp=1718012800",
+      "expires_at": "2024-06-10T12:00:00Z"
+    }
+  ],
+  "created_at": "2024-06-10T10:00:00Z"
+}
+```
+
+---
+
+## Revoke all deliveries
+
+### `DELETE /api/assets/[id]`
+
+Revokes every active delivery for the specified asset. Existing `delivery_url` values will stop working immediately. The asset record itself remains in your library; it is not deleted.
+
+<ParamField path="id" type="string" required>
+  The asset ID whose deliveries you want to revoke.
+</ParamField>
+
+<CodeGroup>
+```bash cURL
+curl -s -X DELETE https://air.wzrd.tech/api/assets/ast_001 \
+  --cookie "session=<your-session-cookie>"
+```
+
+```typescript TypeScript
+const res = await fetch('https://air.wzrd.tech/api/assets/ast_001', {
+  method: 'DELETE',
+  credentials: 'include',
+});
+const result = await res.json();
+```
+</CodeGroup>
+
+**Response** — `200 OK`
+
+<ResponseField name="id" type="string">
+  The asset ID whose deliveries were revoked.
+</ResponseField>
+
+<ResponseField name="revoked" type="number">
+  Number of delivery URLs that were invalidated.
+</ResponseField>
+
+```json
+{
+  "id": "ast_001",
+  "revoked": 1
+}
+```
+
+---
+
+## Error cases
+
+| Status | Meaning |
+|--------|---------|
+| `400` | `box_asset_id` is missing or malformed in a `POST` request. |
+| `401` | Session cookie is missing or expired. |
+| `404` | No asset with the given ID exists in your library. |
+| `409` | The Box asset has already been ingested and is already present in your library. |
+| `504` | Ingest timed out after 300 seconds. The file may be too large or Box is slow to respond. |
+| `500` | Internal error. |

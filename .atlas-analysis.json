@@ -1,0 +1,148 @@
+{
+  "projectType": "saas",
+  "projectName": "Airv",
+  "projectDescription": "A personal AI agent with its own phone number, email inbox, and cloud computer — tied exclusively to you.",
+  "theme": "luma",
+  "primaryColor": "#1a1a1a",
+  "lightColor": null,
+  "darkColor": null,
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Guide",
+        "groups": [
+          {
+            "group": "Getting Started",
+            "pages": [
+              "introduction",
+              "quickstart",
+              "how-it-works"
+            ]
+          },
+          {
+            "group": "Core Concepts",
+            "pages": [
+              "concepts/your-agent",
+              "concepts/channels",
+              "concepts/trust-tiers",
+              "concepts/needs-you"
+            ]
+          },
+          {
+            "group": "Channels",
+            "pages": [
+              "channels/imessage",
+              "channels/email",
+              "channels/web-chat"
+            ]
+          },
+          {
+            "group": "Features",
+            "pages": [
+              "features/skills-connectors",
+              "features/mini-apps",
+              "features/social-publishing",
+              "features/wallet",
+              "features/computer-use"
+            ]
+          },
+          {
+            "group": "Settings",
+            "pages": [
+              "settings/profile-username",
+              "settings/speed-intelligence",
+              "settings/brand-kit"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Reference",
+        "groups": [
+          {
+            "group": "API Overview",
+            "pages": [
+              "api/overview",
+              "api/authentication"
+            ]
+          },
+          {
+            "group": "Endpoints",
+            "pages": [
+              "api/chat",
+              "api/decisions",
+              "api/connectors",
+              "api/skills",
+              "api/assets",
+              "api/wallet",
+              "api/slots"
+            ]
+          },
+          {
+            "group": "Webhooks",
+            "pages": [
+              "api/webhooks/overview",
+              "api/webhooks/imessage",
+              "api/webhooks/email"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "Personal iMessage line — your agent has its own dedicated phone number",
+    "Agent email inbox at <username>@wzrd.tech with full send/receive support",
+    "Dedicated cloud computer (Box VM) per user for persistent agent memory and file storage",
+    "Streaming AI chat via web, iMessage, and desktop with shared conversation history",
+    "Needs You approval queue for email drafts, ad writes, and agent decisions",
+    "Social media publishing to Instagram, TikTok, Meta Ads, and YouTube",
+    "Ad campaign management with spend caps, analytics, and approval gates",
+    "Skills hub for installing and managing agent capabilities",
+    "Composio connectors for OAuth integrations (Gmail, GitHub, etc.)",
+    "Mini-apps: interactive iMessage cards for Kanban, To-Do, and Computer Use",
+    "Crypto wallet with balance, QR funding, and transaction history",
+    "Brand kit editor with typography, palette, and voice guidelines",
+    "Sender trust tiers: owner, known contacts, and unknown senders",
+    "Speed & Intelligence tier selector (Fast, Balanced, Deep)",
+    "Voice transcription for audio input",
+    "Creative generation commands (/imagine, /animate, /zap)"
+  ],
+  "publicApiSurface": [
+    "POST /api/chat — start a chat run",
+    "GET /api/chat/[runId]/events — SSE stream of run events",
+    "GET /api/decisions — list pending approvals",
+    "POST /api/decisions — approve or dismiss a decision",
+    "GET /api/connectors — list Composio toolkit connections",
+    "POST /api/connectors — create a Composio OAuth link session",
+    "PUT /api/connectors — sync connection statuses",
+    "GET /api/skills — search skill hub",
+    "POST /api/skills — install or uninstall a skill",
+    "GET /api/assets — list creative assets",
+    "POST /api/assets — ingest a box asset and mint delivery URL",
+    "DELETE /api/assets/[id] — revoke asset deliveries",
+    "GET /api/wallet — wallet summary and QR code",
+    "GET /api/wallet/activity — wallet transaction history",
+    "GET /api/slots — list content scheduling slots",
+    "POST /api/slots — schedule a new content slot",
+    "PATCH /api/slots/[id] — reschedule a slot",
+    "DELETE /api/slots/[id] — cancel a slot",
+    "POST /api/slots/[id]/publish — publish a slot immediately",
+    "GET /api/ads/analytics — ad performance analytics",
+    "GET /api/ads/accounts — connected ad accounts",
+    "POST /api/ads/writes — propose an ad write action",
+    "PUT /api/settings/username — update username",
+    "PUT /api/settings/speed — update speed tier (fast/balanced/deep)",
+    "GET /api/brand — get brand kit",
+    "PUT /api/brand — update brand kit",
+    "GET /api/me — current user profile and agent addresses",
+    "GET /api/senders — list known senders",
+    "PUT /api/senders — update sender trust tier",
+    "GET /api/box/status — agent computer power state",
+    "POST /api/box/wake — wake the agent computer",
+    "POST /api/box/stop — stop the agent computer",
+    "POST /api/voice/transcribe — transcribe audio to text",
+    "POST /api/mini/link — mint a mini-app token URL",
+    "GET /[handle] — public contact card page"
+  ]
+}

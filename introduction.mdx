@@ -1,0 +1,67 @@
+---
+title: "Airv: A Personal AI Agent Built Around You"
+sidebarTitle: "Introduction"
+description: "Airv gives every user a dedicated AI agent with its own iMessage number, email inbox, and private cloud computer — no shared infrastructure, ever."
+---
+
+Airv is a personal AI agent that belongs entirely to you. Unlike shared AI assistants, every Airv account runs its own isolated agent: your own iMessage number, your own `@wzrd.tech` email address, and your own persistent cloud computer that stores your agent's memory, files, and skills. Nothing is shared with other users.
+
+## What Airv gives you
+
+<CardGroup cols={3}>
+  <Card title="Your own number" icon="phone">
+    A dedicated iMessage line. Text it like any contact in your phone.
+  </Card>
+  <Card title="Your own inbox" icon="envelope">
+    `<username>@wzrd.tech` — your agent reads, drafts, and manages email on your behalf.
+  </Card>
+  <Card title="Your own computer" icon="desktop">
+    A persistent Ubuntu VM running just for you. Memory, files, and skills survive every session.
+  </Card>
+</CardGroup>
+
+## How it's different
+
+Most AI assistants are multitenant services — your history lives alongside thousands of other users, and the agent resets after each session. Airv inverts this model:
+
+- **Isolated by design**: your agent runs in its own VM. No other user's data is on your machine, and your machine holds no credentials that could affect anyone else.
+- **Persistent memory**: everything your agent learns, saves, and builds stays on your VM in `~/.hermes`. There's no session expiry and no amnesia.
+- **Approval before action**: your agent never sends an email or posts to social media without your explicit sign-off. Every consequential action passes through the [Needs You](/concepts/needs-you) queue.
+- **You control the intelligence tier**: choose Fast, Balanced, or Deep in Settings. Your agent uses the right AI model for the task without you ever configuring a model name.
+
+## Where to start
+
+<CardGroup cols={2}>
+  <Card title="Quick Start" icon="rocket" href="/quickstart">
+    Claim your agent, set a username, and send your first message.
+  </Card>
+  <Card title="How It Works" icon="lightbulb" href="/how-it-works">
+    Understand the architecture powering your personal agent.
+  </Card>
+  <Card title="iMessage" icon="message" href="/channels/imessage">
+    Chat with your agent directly from the Messages app.
+  </Card>
+  <Card title="API Reference" icon="code" href="/api/overview">
+    Build on top of Airv with the REST API.
+  </Card>
+</CardGroup>
+
+## Core concepts
+
+Before diving in, these three concepts explain how Airv works and why it behaves the way it does:
+
+<CardGroup cols={3}>
+  <Card title="Trust Tiers" icon="shield" href="/concepts/trust-tiers">
+    How Airv decides what strangers can ask your agent to do.
+  </Card>
+  <Card title="Needs You" icon="bell" href="/concepts/needs-you">
+    The approval queue that gates every consequential action.
+  </Card>
+  <Card title="Channels" icon="arrows-split-up-and-left" href="/concepts/channels">
+    iMessage, email, and web chat — one agent, three surfaces.
+  </Card>
+</CardGroup>
+
+<Note>
+  Airv is currently in private beta. You need an invite from an operator to create an account. Once you have an invite, the [Quick Start](/quickstart) guide walks you through the full onboarding flow.
+</Note>

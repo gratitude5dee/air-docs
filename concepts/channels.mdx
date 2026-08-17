@@ -1,0 +1,90 @@
+---
+title: "Channels: iMessage, Email, and Web Chat"
+sidebarTitle: "Channels"
+description: "Airv lets you reach your agent over iMessage, email, and the web app — all sharing the same conversation context and memory."
+---
+
+Your agent doesn't live in a single app. You can reach it wherever you already spend your time — in iMessage, in your email client, or in the Airv web app at [air.wzrd.tech](https://air.wzrd.tech). No matter which channel you use, you're talking to the same agent with the same memory and the same context. Switch from iMessage to email mid-conversation and your agent won't miss a beat.
+
+## Three Channels, One Conversation
+
+All three channels connect to the same underlying Hermes session (`air-main`), so your conversation history and memory are always consistent regardless of how you reach out.
+
+<CardGroup cols={3}>
+  <Card title="iMessage" icon="message">
+    Text your dedicated phone number from any Apple device. Replies stream in real time, and rich app cards let you approve decisions without opening a browser.
+  </Card>
+  <Card title="Email" icon="envelope">
+    Write to `<username>@wzrd.tech` from any email client. Your agent reads, drafts, and manages threads — and strips quoted history so old context doesn't pollute the model.
+  </Card>
+  <Card title="Web Chat" icon="globe">
+    Visit [air.wzrd.tech](https://air.wzrd.tech) for the full-featured interface. Supports voice input, streaming replies, and creative slash commands.
+  </Card>
+</CardGroup>
+
+<Note>
+  Email threads are scoped slightly differently: each distinct email thread gets its own session context, separate from your main `air-main` session. This keeps long email chains self-contained and prevents cross-thread confusion.
+</Note>
+
+## Channel-Specific Features
+
+While all channels share the same agent and memory, each one has features tailored to how that medium works.
+
+### iMessage
+
+iMessage is the most immediate way to reach your agent. It's designed for quick back-and-forth and for catching decisions on the go.
+
+- **Streaming replies** — text grows in place as your agent composes its response, just like a fast typist
+- **App cards** — rich interactive cards that let you approve, dismiss, or act on decisions without leaving Messages
+- **Typing indicator** — you see the familiar three-dot indicator while your agent is working
+- **Contact card** — your agent's number is pre-configured as a contact so it's recognizable in your list
+- **Voice messages** — send a voice memo and your agent transcribes and responds to it automatically
+
+### Email
+
+Email is best for longer requests, formal drafts, and anything you want a paper trail for.
+
+- **Draft approval flow** — your agent writes emails but never sends them without your explicit approval. Every outbound draft appears in your [Needs You](/concepts/needs-you) queue first.
+- **Threading** — your agent replies in-thread, maintaining proper email headers so conversations stay organized in your client
+- **Reply extraction** — quoted history from prior replies is stripped before the message reaches the model, preventing context bloat and keeping responses accurate
+
+### Web Chat
+
+The web app is the most capable surface — use it for complex tasks, creative work, and managing your agent's settings.
+
+- **Streaming SSE** — responses stream token by token directly in the browser
+- **Voice transcription input** — click the microphone and speak your request; it transcribes before sending
+- **Creative commands** — slash commands unlock generative capabilities:
+
+| Command | What It Does |
+|---------|--------------|
+| `/imagine` | Generates an image from your description |
+| `/animate` | Creates a short animation from a prompt or uploaded image |
+| `/zap` | Triggers a connected automation or workflow |
+
+## How Routing Works
+
+Every inbound message — regardless of channel — passes through the same routing layer before reaching your agent. This layer resolves your identity, applies [trust tier](/concepts/trust-tiers) rules, and delivers the message to your VM. New channels like WhatsApp plug into this same routing system, so they inherit the same session continuity and trust model automatically.
+
+<Tip>
+  You don't need to configure routing. When a new channel is added to Airv, it's available to you without any setup — your agent recognizes messages from it the same way it recognizes messages from existing channels.
+</Tip>
+
+## Choosing a Channel
+
+Use whichever channel fits the moment. Here's a rough guide:
+
+<CardGroup cols={2}>
+  <Card title="Reach for iMessage when…" icon="bolt">
+    You're on your phone, need a quick answer, want to approve a decision with one tap, or prefer conversational back-and-forth.
+  </Card>
+  <Card title="Reach for Email when…" icon="file-lines">
+    You're composing a detailed request, want a formal draft reviewed, or are coordinating with someone else who should be CC'd.
+  </Card>
+  <Card title="Reach for Web Chat when…" icon="wand-magic-sparkles">
+    You want the richest interface, need creative tools, are doing complex multi-step work, or want to review your full conversation history.
+  </Card>
+  <Card title="Any channel works when…" icon="arrows-rotate">
+    You just want to get something done. Pick whichever you have open — your agent is always listening.
+  </Card>
+</CardGroup>

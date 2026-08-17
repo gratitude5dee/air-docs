@@ -1,0 +1,89 @@
+---
+title: "Your Agent: Persistent, Private, and Always Yours"
+sidebarTitle: "Your Agent"
+description: "Learn how Airv's one-agent-per-user model keeps your assistant's memory, skills, and files completely isolated and always available."
+---
+
+Every Airv account comes with a single, dedicated AI agent — not a shared service, not a stateless chatbot, but a persistent process running in a cloud VM that belongs entirely to you. Your agent has its own phone number, its own email address, and its own memory. When you close the browser or put your phone down, nothing is lost. When you come back, your agent picks up exactly where it left off.
+
+## Your Agent's Identity
+
+Your agent isn't anonymous. From the moment your account is created, it is assigned a real identity that others can contact directly:
+
+<CardGroup cols={3}>
+  <Card title="Phone Number" icon="message">
+    A dedicated iMessage number your agent uses to send and receive messages on your behalf.
+  </Card>
+  <Card title="Email Address" icon="envelope">
+    A personal `<username>@wzrd.tech` inbox your agent monitors, reads, drafts from, and responds through.
+  </Card>
+  <Card title="Cloud Computer" icon="computer">
+    A private Ubuntu VM where your agent's memory, files, and skills live — entirely isolated from every other user.
+  </Card>
+</CardGroup>
+
+## Persistence: Nothing Gets Lost
+
+Your agent's entire state lives in `~/.hermes` on your VM. That single directory contains everything:
+
+- **Conversation history** — every message exchanged across all channels
+- **Memory** — facts, preferences, and context your agent has learned about you
+- **Files** — documents, images, and other assets your agent has created or received
+- **Skills** — custom capabilities your agent has been taught
+- **Connector credentials** — authenticated connections to third-party services
+
+When a session ends, nothing is erased. The next time you reach out, your agent resumes with full context intact.
+
+<Note>
+  You never need to "re-explain" yourself. Your agent remembers your preferences, your ongoing projects, and your communication style across every conversation.
+</Note>
+
+## Auto-Sleep and Resume
+
+Your VM goes idle automatically after roughly 20 minutes of inactivity — this keeps infrastructure costs low and resources available when you need them. When your next message arrives, the VM wakes up transparently.
+
+<Steps>
+  <Step title="You send a message">
+    A message arrives via iMessage, email, or the web app.
+  </Step>
+  <Step title="The VM resumes">
+    If your VM is sleeping, it wakes up. Cold start typically completes in under 30 seconds.
+  </Step>
+  <Step title="Your agent responds">
+    Your agent loads its full context from `~/.hermes` and handles your message as if no time had passed.
+  </Step>
+</Steps>
+
+<Tip>
+  You don't manage any of this. Sleep and resume happen automatically — you just send a message and get a reply.
+</Tip>
+
+## Skills and Connectors
+
+Your agent can be extended over time. Skills teach it new capabilities — how to work with a specific API, follow a particular workflow, or handle a recurring task in exactly the way you prefer. Connectors give it authenticated access to third-party services like your calendar, social accounts, or ad platforms.
+
+Both skills and connectors persist across sessions. Teach your agent something once, and it retains that knowledge indefinitely.
+
+<Info>
+  Skills and connectors are managed from the **Skills** and **Connections** sections of the web app. You don't need to re-authenticate or reinstall anything after a VM sleep cycle.
+</Info>
+
+## Complete Isolation
+
+Your agent shares nothing with any other Airv user. There is no shared memory pool, no shared model fine-tune trained on other users' data, and no shared storage. Your files, your conversations, and your agent's learned context are yours alone.
+
+<Warning>
+  Airv staff do not have routine access to your agent's memory or files. Support interactions that require VM-level access are always disclosed and require your explicit consent.
+</Warning>
+
+## Speed Tiers
+
+Your agent always uses the AI model tier you've selected in your account settings. You never configure model names or API keys — you choose an intent and the right model is resolved server-side.
+
+| Tier | Best For |
+|------|----------|
+| **Fast** | Quick replies, simple lookups, short drafts |
+| **Balanced** | Everyday tasks, multi-step workflows, moderate reasoning |
+| **Deep** | Complex research, long-form writing, multi-tool planning |
+
+Switch tiers at any time from your account settings. The change takes effect on the next message your agent processes.

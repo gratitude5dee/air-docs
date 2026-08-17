@@ -1,0 +1,121 @@
+---
+title: "Airv API Reference Overview"
+sidebarTitle: "Overview"
+description: "The Airv REST API lets you manage your agent, chat sessions, decisions, connectors, and content slots programmatically from your own code."
+---
+
+The Airv API gives you programmatic access to every feature available in the Airv web app — your personal AI agent, multi-session chat, connector integrations, creative content slots, and more. All endpoints live under the base URL `https://air.wzrd.tech` and follow standard REST conventions. Whether you're building a custom client, automating workflows, or integrating Airv into a larger system, this reference covers everything you need to get started.
+
+## Base URL
+
+```text
+https://air.wzrd.tech
+```
+
+All API paths are relative to this base URL (e.g., `POST /api/auth/login` → `https://air.wzrd.tech/api/auth/login`).
+
+## Request & Response Format
+
+Most endpoints accept and return JSON. Set the `Content-Type` header to `application/json` on any request that includes a body.
+
+<Note>
+  Voice transcription endpoints use `multipart/form-data` instead of JSON. Refer to the individual endpoint pages for details.
+</Note>
+
+## Authentication
+
+Airv authenticates API requests using a **session cookie** (`airv_session`) that is set after you complete the phone OTP login flow. In a browser context the cookie is sent automatically. For server-side or programmatic use, forward it explicitly in the `Cookie` request header.
+
+Some protected endpoints — such as gateway proxy routes — additionally require a per-box `GATEWAY_TOKEN` passed as a bearer token. See the [Authentication](/api/authentication) page for the full login flow and server-side usage examples.
+
+## Rate Limits & Spend Caps
+
+<Warning>
+  Voice transcription is capped at **20 requests per hour** per session. Exceeding this limit returns `429 Too Many Requests`. Ad analytics endpoints may return cached responses rather than live data to reduce backend load.
+</Warning>
+
+If your account has a monthly spend cap configured, requests that would push you over the cap also return `429`. You can inspect your current cap in the response from [`GET /api/me`](/api/authentication#get-api-me).
+
+## Error Format
+
+Every error response — regardless of status code — returns a consistent JSON body so you can handle failures uniformly:
+
+```json
+{
+  "error": "<human-readable message>"
+}
+```
+
+### HTTP Status Codes
+
+| Code | Meaning |
+|------|---------|
+| `200 OK` | Request succeeded. |
+| `201 Created` | Resource was successfully created. |
+| `202 Accepted` | Request accepted; async operation is in progress. |
+| `400 Bad Request` | The request body or query parameters are invalid. |
+| `401 Unauthorized` | Session cookie is missing, expired, or invalid. |
+| `403 Forbidden` | Session is valid but you lack permission for this action (e.g., Tier 2 operation). |
+| `404 Not Found` | The requested resource does not exist. |
+| `409 Conflict` | A resource with conflicting data already exists (e.g., duplicate phone number). |
+| `422 Unprocessable Entity` | Input is syntactically valid but fails semantic validation. |
+| `429 Too Many Requests` | Rate limit hit or monthly spend cap reached. |
+| `500 Internal Server Error` | An unexpected error occurred on the server. |
+
+## Streaming (Server-Sent Events)
+
+Chat responses and creative job progress are delivered as **Server-Sent Events (SSE)** rather than a single JSON response. Connect to these endpoints using the browser's native `EventSource` API or a `fetch` call with `Accept: text/event-stream`.
+
+```typescript
+const res = await fetch('https://air.wzrd.tech/api/chat/stream', {
+  method: 'POST',
+  credentials: 'include',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ message: 'Hello, Airv!' }),
+});
+
+const reader = res.body!.getReader();
+const decoder = new TextDecoder();
+
+while (true) {
+  const { done, value } = await reader.read();
+  if (done) break;
+  console.log(decoder.decode(value));
+}
+```
+
+<Info>
+  SSE streams have a maximum duration of **800 seconds**. Long-running creative jobs that exceed this window will emit a final `event: timeout` before the connection closes; poll the job status endpoint to retrieve the remaining output.
+</Info>
+
+## Endpoint Groups
+
+<CardGroup cols={2}>
+  <Card title="Authentication" icon="key" href="/api/authentication">
+    Phone OTP login, session management, and the `/api/me` profile endpoint.
+  </Card>
+  <Card title="Chat" icon="message" href="/api/chat">
+    Start chat sessions, send messages, and stream responses via SSE.
+  </Card>
+  <Card title="Decisions" icon="code-branch" href="/api/decisions">
+    Query and resolve the pending decisions in your Needs You queue.
+  </Card>
+  <Card title="Connectors" icon="plug" href="/api/connectors">
+    Connect and manage third-party service integrations for your agent.
+  </Card>
+  <Card title="Skills" icon="wand-magic-sparkles" href="/api/skills">
+    Search the skill hub and install or remove skills from your agent.
+  </Card>
+  <Card title="Assets" icon="image" href="/api/assets">
+    Manage creative assets and mint short-lived signed delivery URLs.
+  </Card>
+  <Card title="Slots" icon="calendar" href="/api/slots">
+    Schedule, reschedule, cancel, and immediately publish content slots.
+  </Card>
+  <Card title="Wallet" icon="wallet" href="/api/wallet">
+    View your wallet balance, QR funding code, and transaction history.
+  </Card>
+  <Card title="Webhooks" icon="webhook" href="/api/webhooks/overview">
+    How Airv receives iMessages and emails and routes them to your agent.
+  </Card>
+</CardGroup>

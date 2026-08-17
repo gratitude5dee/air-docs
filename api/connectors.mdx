@@ -1,0 +1,197 @@
+---
+title: "Connectors & Integrations"
+sidebarTitle: "Connectors"
+description: "List, create, and sync your Composio toolkit connections so your Airv agent can take action across third-party platforms and services."
+---
+
+Connectors link your Airv agent to external platforms — email, calendar, ad networks, social media, and more — through Composio's OAuth toolkit. You use this API to see which connections are active, generate OAuth redirect links so users can authorise new integrations, and force-sync status changes from Composio. The first time a sync detects an active connection, Airv automatically installs the corresponding MCP server so your agent can start using the integration immediately.
+
+<Note>
+  Connection state is managed by Composio. Airv reflects that state in real time after each sync. If a connection appears stale, call `PUT /api/connectors` to pull the latest status.
+</Note>
+
+---
+
+## List connections
+
+### `GET /api/connectors`
+
+Returns every Composio toolkit connection associated with your account, along with its current status and metadata.
+
+<CodeGroup>
+```bash cURL
+curl -s https://air.wzrd.tech/api/connectors \
+  --cookie "session=<your-session-cookie>"
+```
+
+```typescript TypeScript
+const res = await fetch('https://air.wzrd.tech/api/connectors', {
+  credentials: 'include',
+});
+const { connectors } = await res.json();
+```
+</CodeGroup>
+
+**Response** — `200 OK`
+
+<ResponseField name="connectors" type="array">
+  Array of connection objects.
+</ResponseField>
+
+<ResponseField name="connectors[].id" type="string">
+  Airv-internal identifier for this connection.
+</ResponseField>
+
+<ResponseField name="connectors[].toolkit" type="string">
+  The Composio toolkit slug, e.g. `"gmail"`, `"google_calendar"`, `"twitter"`.
+</ResponseField>
+
+<ResponseField name="connectors[].status" type="string">
+  Current connection status. One of `"active"`, `"expired"`, `"pending"`, `"error"`.
+</ResponseField>
+
+<ResponseField name="connectors[].connected_at" type="string">
+  ISO 8601 timestamp of when the connection was first authorised.
+</ResponseField>
+
+<ResponseField name="connectors[].account_label" type="string">
+  Display name or email address associated with the connected account, if available.
+</ResponseField>
+
+```json
+{
+  "connectors": [
+    {
+      "id": "conn_g01",
+      "toolkit": "gmail",
+      "status": "active",
+      "connected_at": "2024-05-01T12:00:00Z",
+      "account_label": "alice@example.com"
+    },
+    {
+      "id": "conn_tw01",
+      "toolkit": "twitter",
+      "status": "expired",
+      "connected_at": "2024-03-15T08:30:00Z",
+      "account_label": "@alice_example"
+    }
+  ]
+}
+```
+
+---
+
+## Create an OAuth link session
+
+### `POST /api/connectors`
+
+Generates a Composio OAuth redirect URL for a specific toolkit. Redirect the user to this URL to complete authorisation. After the user grants access, Composio calls back and the connection status updates to `"active"` on the next sync.
+
+<ParamField body="toolkit" type="string" required>
+  The Composio toolkit slug to connect, e.g. `"gmail"`, `"google_calendar"`, `"twitter"`, `"linkedin"`.
+</ParamField>
+
+<CodeGroup>
+```bash cURL
+curl -s -X POST https://air.wzrd.tech/api/connectors \
+  -H "Content-Type: application/json" \
+  --cookie "session=<your-session-cookie>" \
+  -d '{ "toolkit": "gmail" }'
+```
+
+```typescript TypeScript
+const res = await fetch('https://air.wzrd.tech/api/connectors', {
+  method: 'POST',
+  credentials: 'include',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ toolkit: 'gmail' }),
+});
+const { redirect_url } = await res.json();
+// Redirect the user:
+window.location.href = redirect_url;
+```
+</CodeGroup>
+
+**Response** — `200 OK`
+
+<ResponseField name="redirect_url" type="string">
+  The Composio OAuth URL to which you should redirect the user. The URL is short-lived; use it promptly.
+</ResponseField>
+
+```json
+{
+  "redirect_url": "https://backend.composio.dev/api/v1/auth/link/eyJhb..."
+}
+```
+
+<Tip>
+  After the OAuth flow completes, call `PUT /api/connectors` to sync the new connection into Airv and trigger MCP installation.
+</Tip>
+
+---
+
+## Sync connection statuses
+
+### `PUT /api/connectors`
+
+Pulls the latest connection statuses from Composio and updates Airv's local records. If this sync detects at least one newly active connection and no MCP server is yet installed, Airv installs MCP automatically in the background.
+
+<CodeGroup>
+```bash cURL
+curl -s -X PUT https://air.wzrd.tech/api/connectors \
+  --cookie "session=<your-session-cookie>"
+```
+
+```typescript TypeScript
+const res = await fetch('https://air.wzrd.tech/api/connectors', {
+  method: 'PUT',
+  credentials: 'include',
+});
+const result = await res.json();
+```
+</CodeGroup>
+
+**Response** — `200 OK`
+
+<ResponseField name="synced" type="number">
+  Number of connections whose status was updated during this sync.
+</ResponseField>
+
+<ResponseField name="mcp_installed" type="boolean">
+  `true` if MCP was installed during this sync operation, `false` otherwise.
+</ResponseField>
+
+<ResponseField name="connectors" type="array">
+  Full updated list of connection objects, in the same shape as the `GET` response.
+</ResponseField>
+
+```json
+{
+  "synced": 2,
+  "mcp_installed": true,
+  "connectors": [
+    {
+      "id": "conn_g01",
+      "toolkit": "gmail",
+      "status": "active",
+      "connected_at": "2024-05-01T12:00:00Z",
+      "account_label": "alice@example.com"
+    }
+  ]
+}
+```
+
+---
+
+## Error cases
+
+| Status | Meaning |
+|--------|---------|
+| `400` | Missing or unrecognised `toolkit` slug in a `POST` request. |
+| `401` | Session cookie is missing or expired. |
+| `502` | Composio is unreachable. The sync or OAuth session could not be completed. Retry shortly. |
+| `500` | Internal error. |
+
+<Warning>
+  OAuth redirect URLs expire quickly. If the user does not complete authorisation within a few minutes, generate a new link by calling `POST /api/connectors` again.
+</Warning>

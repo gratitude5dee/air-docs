@@ -1,0 +1,60 @@
+---
+title: "Computer Use: Watch and Guide Your Agent's Desktop"
+sidebarTitle: "Computer Use"
+description: "View your agent's cloud computer in real time and guide it through complex tasks using the Computer Use mini-app or the Devices tab in the web app."
+---
+
+Your agent runs on a real Ubuntu desktop environment hosted in the cloud. It can browse the web, run and debug code, edit files, and use full desktop applications — all without touching your own machine. Computer Use lets you see exactly what your agent sees and step in to guide it whenever you want, either from the web app or directly from an iMessage card.
+
+## Accessing your agent's desktop
+
+<CardGroup cols={2}>
+  <Card title="Devices tab" icon="display">
+    In the web app, open the **Devices** tab and click your agent's computer. A live desktop stream opens in your browser — full screen, fully interactive.
+  </Card>
+  <Card title="iMessage card" icon="message">
+    Your agent can send a Computer Use card into your Messages thread. Tap the card to open the live desktop stream inline, without switching apps.
+  </Card>
+</CardGroup>
+
+## What you can do
+
+Once you're connected to your agent's desktop, you have full keyboard and mouse control:
+
+- **Watch** your agent browse the web, execute scripts, manage files, or use GUI applications in real time
+- **Click and type** to guide your agent through something it can't resolve autonomously — fill in a CAPTCHA, handle an unexpected dialog, or just take over temporarily
+- **Review work in progress** before your agent sends you a summary — see the actual output, not just a description of it
+- **Use the computer yourself** for tasks where direct access is more efficient than instructing your agent step by step
+
+<Tip>
+  For long-running tasks, you don't need to stay in the Computer Use view. Close it and let your agent keep working. When it's done — or if it gets stuck — it will send you a message. You can open a fresh stream any time to check in.
+</Tip>
+
+## Your agent's persistent VM vs. disposable sandboxes
+
+Your agent has two kinds of compute at its disposal, and knowing the difference helps you understand what's happening under the hood.
+
+<CardGroup cols={2}>
+  <Card title="Persistent VM" icon="server">
+    Your agent's home environment. Installed skills, saved files, browser sessions, and configuration all live here and survive between conversations.
+  </Card>
+  <Card title="Daytona Sandboxes" icon="flask">
+    Disposable environments your agent spins up automatically for risky or experimental operations — running untrusted code, testing destructive commands, or exploring unknown files.
+  </Card>
+</CardGroup>
+
+When your agent uses a **Daytona sandbox**, it creates a clean, isolated container, does its work, and destroys the container when finished. A mistake inside a sandbox cannot damage your agent's persistent home environment — files, configuration, and history on the main VM are completely unaffected.
+
+The Computer Use view shows your agent's **persistent VM** by default. If your agent is working in a sandbox, it will tell you in the conversation.
+
+## Security
+
+Your desktop stream is a powerful credential — anyone with access to the stream URL has interactive control of your entire VM environment. Airv takes several steps to ensure that access stays with you:
+
+- **Proxy routing**: the stream is proxied through Airv's control plane. You never see the raw VM connection URL, and it never appears in your browser's network log or history.
+- **Short-lived tickets**: each stream session uses a ticket that expires after use. A URL from a previous session cannot be replayed.
+- **Private by default**: your stream is private to your account. No one at Airv can observe your desktop without your explicit, scoped consent.
+
+<Info>
+  The desktop is streamed over **WebRTC/VNC**. A fast, low-latency connection gives the smoothest experience. If you notice lag, try closing other bandwidth-intensive tabs or switching to a wired connection.
+</Info>

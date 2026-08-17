@@ -1,0 +1,78 @@
+---
+title: "Speed and Intelligence: Choose Your Agent's AI Tier"
+sidebarTitle: "Speed & Intelligence"
+description: "Pick Fast, Balanced, or Deep to control how your agent balances response speed against reasoning depth. Change it any time without restarting."
+---
+
+Your agent's Speed & Intelligence setting controls the trade-off between how quickly it responds and how deeply it reasons through a problem. You pick a tier; Airv handles the rest. You never need to name a model or tweak a parameter.
+
+## The Three Tiers
+
+<CardGroup cols={3}>
+  <Card title="⚡ Fast" icon="bolt">
+    **Quickest responses.** Best for conversational back-and-forth, simple lookups, quick clarifying questions, and any task where getting an answer in seconds matters more than exhaustive analysis.
+  </Card>
+  <Card title="⚖️ Balanced" icon="scale-balanced">
+    **A reliable middle ground.** Handles most everyday work well — coding help, email drafts, research summaries, scheduling, and general Q&A — without the wait time of Deep.
+  </Card>
+  <Card title="🔬 Deep" icon="brain">
+    **Deepest reasoning available.** Use this for complex multi-step planning, long-form writing, critical analysis, debugging intricate code, or any task where accuracy and thoroughness outweigh speed.
+  </Card>
+</CardGroup>
+
+## How to Change Your Tier
+
+You can switch tiers at any point — no restart, no interruption to ongoing tasks.
+
+<Steps>
+  <Step title="Open Settings">
+    Go to **Settings → Speed & Intelligence** in the Airv web app.
+  </Step>
+  <Step title="Select a tier">
+    Click **Fast**, **Balanced**, or **Deep**. The currently active tier is highlighted.
+  </Step>
+  <Step title="Your change takes effect immediately">
+    The new tier applies starting with the very next message your agent processes. Any response already in progress finishes on the tier that was active when it started.
+  </Step>
+</Steps>
+
+## What Changes Under the Hood
+
+Each tier maps to a specific AI model running on Airv's infrastructure. You interact only with the tier name — Airv manages model selection, routing, and upgrades behind the scenes.
+
+<Info>
+  When Airv upgrades the underlying model for a tier, you automatically benefit without changing any setting. Your tier stays the same; the capability improves.
+</Info>
+
+This means you never need to track model version numbers or migration guides. If your agent gets smarter on Balanced next month, that's Airv's doing, not a config change on your end.
+
+## Compute Spend
+
+Tiers are not equally weighted against your monthly spend cap.
+
+- **Fast** uses the least compute per turn.
+- **Balanced** uses a moderate amount.
+- **Deep** uses the most compute per turn — notably more than Fast or Balanced.
+
+<Warning>
+  If you have a monthly spend cap set on your account, running your agent on **Deep** for extended sessions will count against it faster. Consider switching back to Balanced or Fast for lighter tasks to preserve your budget for work that genuinely benefits from deeper reasoning.
+</Warning>
+
+## Which Tier Should You Start With?
+
+<Note>
+  Start with **Balanced**. It handles the vast majority of tasks well and gives you a reliable baseline for judging when you actually need to go faster or deeper.
+</Note>
+
+A practical guide:
+
+| Situation | Recommended tier |
+|---|---|
+| Quick Q&A, casual chat, simple lookups | Fast |
+| Email drafts, coding help, research summaries | Balanced |
+| Complex planning, long-form writing, critical analysis | Deep |
+| Debugging a tricky bug with many moving parts | Deep |
+| Scheduling and reminders | Fast |
+| Reviewing a contract or legal document | Deep |
+
+Switch freely — there's no penalty for changing tiers multiple times in a session.

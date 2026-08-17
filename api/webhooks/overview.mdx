@@ -1,0 +1,64 @@
+---
+title: "How Airv Handles Inbound Messages and Webhooks"
+sidebarTitle: "Overview"
+description: "Learn how Airv receives iMessages and emails, deduplicates them, and guarantees your agent only processes each message once."
+---
+
+Airv connects to two inbound channels — iMessage (via Photon/Spectrum) and email (via AgentMail) — and routes every arriving message to your personal AI agent automatically. You don't configure webhooks, set up endpoints, or manage credentials. The moment a text or email lands, Airv takes over.
+
+## The processing pipeline
+
+Every inbound message — whether an iMessage or an email — travels through the same five-stage pipeline before your agent sees it.
+
+<Steps>
+  <Step title="Signature verification">
+    Airv confirms the event came from the real provider using a cryptographic signature. Unsigned or tampered requests are rejected before any processing begins.
+  </Step>
+  <Step title="Routing">
+    Airv maps the inbound address (your phone number or `@wzrd.tech` email) to your account and your agent. Each address is exclusively yours.
+  </Step>
+  <Step title="Deduplication">
+    Providers like Spectrum and AgentMail retry delivery if they don't receive a prompt 200 response. Airv tracks every message ID it has seen, so if the same message arrives twice, the second copy is silently dropped. Your agent processes each message exactly once.
+  </Step>
+  <Step title="Acknowledgment">
+    Airv returns a `200 OK` to the provider immediately — before your agent begins working. This prevents spurious retries and keeps delivery pipelines healthy.
+  </Step>
+  <Step title="Async processing">
+    Your agent wakes up, reads the message, and formulates a reply. This happens asynchronously, so the provider's delivery thread is never blocked.
+  </Step>
+</Steps>
+
+## Deduplication guarantee
+
+Every message that arrives at Airv carries a unique ID assigned by the upstream provider. Airv records that ID as soon as the message clears signature verification. If the provider retries and the same ID appears again, Airv discards the duplicate without forwarding it to your agent. You will never receive a duplicate reply because your agent never sees the duplicate message.
+
+## Burst handling
+
+If you send several messages in quick succession — a thought split across two texts, or a question followed immediately by more context — Airv holds off on waking your agent until it detects a short pause in the stream. Your agent then receives all of those messages as a single turn and replies to your complete thought, not each fragment individually.
+
+<Tip>
+  Burst debouncing means you can send corrections or additions right after a message and your agent will incorporate them naturally. You don't need to cram everything into one send.
+</Tip>
+
+## Trust tiers
+
+Not every sender gets the same level of access to your agent. Messages from your own number or address are treated as fully trusted (Tier 0). Known contacts fall into Tier 1. Everyone else starts at Tier 2, where access is gated before your agent engages.
+
+<Info>
+  Trust-tier gating protects you from unsolicited parties interacting with your agent without your awareness. You can promote senders to higher tiers at any time. See [Trust Tiers](/concepts/trust-tiers) for the full model.
+</Info>
+
+## Inbound channels at a glance
+
+<CardGroup cols={2}>
+  <Card title="iMessage" icon="message" href="/api/webhooks/imessage">
+    Texts sent to your dedicated number are delivered via Photon/Spectrum, verified with HMAC-SHA256, and routed to your agent within seconds.
+  </Card>
+  <Card title="Email" icon="envelope" href="/api/webhooks/email">
+    Emails to your `@wzrd.tech` address are delivered via AgentMail using Svix-signed webhooks. Your agent drafts replies for your approval before anything is sent.
+  </Card>
+</CardGroup>
+
+## For developers building integrations
+
+The pages in this section describe how messages flow **into** your agent. If you want to receive events about what your agent is doing — responses as they stream, job completions, status changes — use the server-sent event (SSE) streams available on the chat and creative job endpoints. Those are the right tool for building on top of your agent programmatically. See [Chat API](/api/chat).

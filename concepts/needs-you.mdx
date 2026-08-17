@@ -1,0 +1,91 @@
+---
+title: "Needs You: Your Agent's Approval Queue"
+sidebarTitle: "Needs You"
+description: "The Needs You queue shows every decision your agent is waiting on before acting — email drafts, ad writes, and incoming requests from unknown senders."
+---
+
+Your agent can read your email, manage your calendar, post to your social accounts, and run ad campaigns — but it never takes a consequential, irreversible action without your explicit sign-off. The Needs You queue is where those decisions wait for you. Think of it as a tray of things your agent has prepared and is ready to execute the moment you say go. Nothing in that tray moves without your approval.
+
+## Why the Queue Exists
+
+The actions your agent takes on your behalf are real. Sending an email is permanent. Publishing a post is public. Changing a campaign budget has financial consequences. Gating irreversible operations behind your approval isn't a workaround for an untrustworthy AI — it's a deliberate architectural decision to keep you in control of actions that matter.
+
+<Note>
+  The approval gate is structural, not a setting. It cannot be disabled. This is intentional: no matter how confident your agent is about an action, the consequences of getting it wrong are yours to bear, so the decision to proceed is always yours to make.
+</Note>
+
+## What Appears in the Queue
+
+Your queue can contain several types of decisions, each with its own review flow.
+
+### Email Drafts
+
+When your agent composes an outbound email, it never sends directly. The draft appears in your queue with the full recipient list, subject line, and body. You read it, make any edits you want, and approve to send — or dismiss it if you've changed your mind.
+
+### Ad Writes
+
+When your agent proposes creating a new ad, modifying copy, adjusting a budget, or pausing a campaign, the change lands in your queue as a structured diff. You see exactly what will change before anything touches your ad account.
+
+### Content Plans
+
+Proposed social media posts — generated from your connected content calendar, a brief you gave your agent, or a source it was asked to repurpose — appear for your review before they're scheduled or published.
+
+### Unknown Sender Requests
+
+Any time a [Tier 2 — Unknown](/concepts/trust-tiers) sender asks your agent to do something, the request is held here rather than acted on. You can approve it, dismiss it, or use it as an opportunity to promote the sender to Known.
+
+### Reconnect Requests
+
+When a connector loses its authorization — an OAuth token expires, a password changes, an app revokes access — your agent can't proceed until you re-authenticate. A reconnect request appears in your queue with a direct link to the re-authorization flow.
+
+## How to Resolve a Decision
+
+You can act on Needs You items from any surface — no need to stop what you're doing and open a specific app.
+
+<CardGroup cols={3}>
+  <Card title="Web App" icon="browser">
+    Open the **Needs You** section in the left sidebar of [air.wzrd.tech](https://air.wzrd.tech). Each item shows full context — the draft, the diff, or the original request — with **Approve** and **Dismiss** actions.
+  </Card>
+  <Card title="iMessage" icon="message">
+    Decisions arrive as interactive app cards in your conversation thread. Tap the card to flip it — **Approved ✓** appears in place. No browser, no context switch, no reply needed.
+  </Card>
+  <Card title="Email" icon="envelope">
+    Email drafts appear in the queue. Approving sends the email from your `@wzrd.tech` address. You can also reply to the notification email with `approve` or `dismiss` as a shortcut.
+  </Card>
+</CardGroup>
+
+## Follow-Up Cadence
+
+If a decision sits unresolved, your agent won't let it go silently — but it also won't bombard you. It will follow up a few times over the course of several days, spaced out so reminders feel like gentle nudges rather than nagging. After that, unresolved items remain in your queue indefinitely until you act on them.
+
+<Tip>
+  If your queue is backing up, the **Bulk Review** view in the web app lets you scan and act on multiple items at once. Swipe gestures work on mobile.
+</Tip>
+
+## Frequently Asked Questions
+
+<AccordionGroup>
+  <Accordion title="Can I turn off the approval gate?">
+    No — and this is by design. The approval gate is structural, not a configurable preference. Your agent manages real accounts, sends real emails, and takes real-world actions. The gate exists so those actions only happen when you explicitly choose them. There is no setting to bypass it.
+  </Accordion>
+  <Accordion title="What happens if I dismiss a decision?">
+    The item is marked dismissed and removed from your active queue. Nothing is acted on. If the decision was an email draft, it isn't sent. If it was an Unknown sender request, nothing happens and the sender is not notified. Dismissed items are archived and visible in your queue history if you need to reference them later.
+  </Accordion>
+  <Accordion title="Do all actions require approval?">
+    No. Many things your agent does happen automatically and never appear in your queue:
+
+    - **Reading** your email, messages, or documents
+    - **Summarizing** content for you
+    - **Drafting** text that you asked to review before it goes anywhere
+    - **Searching** the web or your connected data sources
+    - **Scheduling lookups** like checking calendar availability
+
+    Approval is required for actions that are irreversible or have external consequences: sending email, publishing to social media, modifying ad campaigns, and anything requested by an Unknown sender.
+  </Accordion>
+  <Accordion title="Can my agent approve its own decisions?">
+    No. Your agent cannot resolve its own Needs You items. The approval action requires a verified signal from you — a tap, a click, or a reply from your authenticated session. This closes the loop and ensures your agent can't self-authorize consequential actions.
+  </Accordion>
+  <Accordion title="What if I approve something by mistake?">
+    For most actions, there is a brief cancellation window after approval — typically a few seconds — during which you can undo. Once that window closes, the action has been taken. For email, this means the message has been sent and cannot be recalled through Airv (though your email provider may offer a recall feature). This is another reason the draft review step exists: read carefully before approving.
+  </Accordion>
+</AccordionGroup>

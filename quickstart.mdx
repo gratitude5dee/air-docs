@@ -1,47 +1,62 @@
 ---
-title: "Quickstart"
-description: "Begin with a guide on the fastest path to a successful outcome"
+title: "Get Started with Airv in Minutes"
+sidebarTitle: "Quick Start"
+description: "Learn how to claim your Airv agent, set a username, and send your first message — the complete onboarding flow in 4 steps."
 ---
 
-Describe how someone begins using your product. What is the first thing they need to do? Are there any prerequisites?
+Airv is currently in private beta. Before you can do anything, an operator must provision your account and send you a personal invite link. Once you have that link, the entire setup takes under two minutes — your agent walks you through every step over iMessage.
 
-A quickstart should take someone from zero to using your product. They'll get a quick win and a sense of what they can accomplish.
+## How the Invite Works
 
-## Prerequisites
+Your operator sends you an `sms:` deep link out-of-band — through a text, email, or DM. When you tap it, your iPhone's Messages app opens pre-addressed to your new, dedicated Airv number. All you have to do is hit **Send**.
 
-Before you begin, you must have:
+That first message is intentional. Airv is **inbound-first**: your agent never texts you cold on a new line. It always waits for you to initiate contact. This keeps your number out of spam filters and puts you in control of when the conversation starts.
 
-- Requirement one (for example, Node.js 18+, a free account, an API key)
-- Requirement two (for example, a compatible device, a compatible browser, a compatible operating system)
-
-## Get started
+## Onboarding Flow
 
 <Steps>
-  <Step title="Install">
-    Describe how to install your product or sign up.
-
-    ```bash
-    npm install your-package
-    ```
+  <Step title="Tap your invite link and send the first message">
+    Open the `sms:` link your operator sent you. Messages launches with your agent's dedicated number already in the To field. Tap **Send** — even a blank message works. This activates your account and your agent responds within a few seconds.
   </Step>
-  <Step title="Configure">
-    Describe any setup or configuration needed before first use.
 
-    ```bash
-    your-cli init
-    ```
+  <Step title="Verify your phone number">
+    Your agent sends a one-time passcode (OTP) to your phone via [thirdweb](https://thirdweb.com). Enter the code your agent asks for. This step proves you own the number and automatically creates a self-custodied crypto wallet tied to your account — no seed phrase setup required.
   </Step>
-  <Step title="Run it">
-    Show the first thing a user does to see it working.
 
-    ```bash
-    your-cli start
-    ```
+  <Step title="Choose your username">
+    Your agent prompts you to pick a username. This becomes your permanent identity across Airv and activates your personal email address: `<username>@wzrd.tech`.
+
+    Usernames must follow these rules:
+    - **2–24 characters** long
+    - **Lowercase letters, numbers, and underscores only** — no spaces or special characters
+    - Must be unique across all Airv users
+
+    <Note>
+      You can rename your username later, but only **once every 30 days**. Your old `@wzrd.tech` address keeps working after a rename so existing senders aren't broken — but pick something you like.
+    </Note>
+  </Step>
+
+  <Step title="Save your agent's contact card">
+    Once your username is set, your agent sends you a contact card. **Save it to your contacts.** This ensures your agent shows up as a recognized sender in Messages rather than an unknown number that iOS might route to the Junk or Unknown Senders folder.
   </Step>
 </Steps>
 
-<Tip>
-  Give people a way to get help. This could be a link to a support page, a chat with a customer support agent, or a forum for your product.
+## Three Ways to Reach Your Agent
 
-  Example: Need help? Reach out to us at [support@yourcompany.com](mailto:support@yourcompany.com).
+After onboarding you can talk to your agent from anywhere. All three surfaces share the exact same conversation context — start a task on iMessage and check the result in the web app, or reply to an email your agent sent you and the thread continues seamlessly.
+
+<CardGroup cols={3}>
+  <Card title="iMessage" icon="message">
+    Text your agent at its dedicated number anytime. Works with all iMessage features — tapbacks, replies, and rich link previews.
+  </Card>
+  <Card title="Web App" icon="browser">
+    Visit [air.wzrd.tech](https://air.wzrd.tech) for a full chat interface. Useful on desktop or when you want a larger screen.
+  </Card>
+  <Card title="Email" icon="envelope">
+    Send a message to `<username>@wzrd.tech`. Your agent reads and replies to email just like any other message — great for forwarding threads or attachments.
+  </Card>
+</CardGroup>
+
+<Tip>
+  Not sure which surface to use? Start with iMessage — it's the fastest path and the one your agent is most optimized for.
 </Tip>

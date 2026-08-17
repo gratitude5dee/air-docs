@@ -1,0 +1,216 @@
+---
+title: "Skills Hub"
+sidebarTitle: "Skills"
+description: "Search the Airv skill hub and install or uninstall discrete capability packages that extend what your personal agent can do for you."
+---
+
+Skills are discrete capability packages that extend your Airv agent's repertoire — think specialist tools for research, writing, data analysis, or platform-specific workflows. The Skills API lets you search the hub to discover what is available and then install or uninstall skills directly from your code or dashboard. Install and uninstall operations can take up to 300 seconds because they provision or tear down the underlying tooling in your agent environment.
+
+<Note>
+  Installed skills are scoped to your account. Installing a skill does not affect other users.
+</Note>
+
+---
+
+## Search skills
+
+### `GET /api/skills`
+
+Returns a list of skills matching your search query. If you omit the `q` parameter, the endpoint returns a default catalogue of available skills.
+
+<ParamField query="q" type="string">
+  Full-text search query. Matches against skill names, descriptions, and tags. Omit to browse the full catalogue.
+</ParamField>
+
+<CodeGroup>
+```bash cURL
+curl -s "https://air.wzrd.tech/api/skills?q=research" \
+  --cookie "session=<your-session-cookie>"
+```
+
+```typescript TypeScript
+const res = await fetch(
+  'https://air.wzrd.tech/api/skills?q=research',
+  { credentials: 'include' }
+);
+const { skills } = await res.json();
+```
+</CodeGroup>
+
+**Response** — `200 OK`
+
+<ResponseField name="skills" type="array">
+  Array of skill objects matching the query.
+</ResponseField>
+
+<ResponseField name="skills[].identifier" type="string">
+  Unique slug used to install the skill, e.g. `"web-research-pro"`.
+</ResponseField>
+
+<ResponseField name="skills[].name" type="string">
+  Human-readable display name of the skill.
+</ResponseField>
+
+<ResponseField name="skills[].description" type="string">
+  Short description of what the skill enables.
+</ResponseField>
+
+<ResponseField name="skills[].tags" type="array of strings">
+  Category tags, e.g. `["research", "web", "summarisation"]`.
+</ResponseField>
+
+<ResponseField name="skills[].installed" type="boolean">
+  `true` if this skill is currently installed in your agent environment.
+</ResponseField>
+
+```json
+{
+  "skills": [
+    {
+      "identifier": "web-research-pro",
+      "name": "Web Research Pro",
+      "description": "Deep web search, page extraction, and structured summarisation.",
+      "tags": ["research", "web", "summarisation"],
+      "installed": false
+    },
+    {
+      "identifier": "academic-search",
+      "name": "Academic Search",
+      "description": "Query arXiv, PubMed, and Semantic Scholar for academic papers.",
+      "tags": ["research", "academic"],
+      "installed": true
+    }
+  ]
+}
+```
+
+---
+
+## Install a skill
+
+### `POST /api/skills` — install action
+
+Installs a skill into your agent environment by its unique `identifier`. The operation provisions any required tooling and may take up to 300 seconds to complete.
+
+<ParamField body="action" type="string" required>
+  Must be `"install"` to install a skill.
+</ParamField>
+
+<ParamField body="identifier" type="string" required>
+  The unique skill identifier as returned by `GET /api/skills`. For example, `"web-research-pro"`.
+</ParamField>
+
+<CodeGroup>
+```bash cURL
+curl -s -X POST https://air.wzrd.tech/api/skills \
+  -H "Content-Type: application/json" \
+  --cookie "session=<your-session-cookie>" \
+  -d '{ "action": "install", "identifier": "web-research-pro" }'
+```
+
+```typescript TypeScript
+const res = await fetch('https://air.wzrd.tech/api/skills', {
+  method: 'POST',
+  credentials: 'include',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ action: 'install', identifier: 'web-research-pro' }),
+});
+const result = await res.json();
+```
+</CodeGroup>
+
+**Response** — `200 OK`
+
+<ResponseField name="action" type="string">
+  The action that was performed: `"install"`.
+</ResponseField>
+
+<ResponseField name="identifier" type="string">
+  The identifier of the skill that was installed.
+</ResponseField>
+
+<ResponseField name="status" type="string">
+  Installation outcome, e.g. `"installed"`.
+</ResponseField>
+
+```json
+{
+  "action": "install",
+  "identifier": "web-research-pro",
+  "status": "installed"
+}
+```
+
+---
+
+## Uninstall a skill
+
+### `POST /api/skills` — uninstall action
+
+Removes a skill from your agent environment by its display name. The operation tears down the underlying tooling and may take up to 300 seconds.
+
+<ParamField body="action" type="string" required>
+  Must be `"uninstall"` to remove a skill.
+</ParamField>
+
+<ParamField body="name" type="string" required>
+  The display name of the skill to remove, as returned in the `name` field from `GET /api/skills`. For example, `"Web Research Pro"`.
+</ParamField>
+
+<CodeGroup>
+```bash cURL
+curl -s -X POST https://air.wzrd.tech/api/skills \
+  -H "Content-Type: application/json" \
+  --cookie "session=<your-session-cookie>" \
+  -d '{ "action": "uninstall", "name": "Web Research Pro" }'
+```
+
+```typescript TypeScript
+const res = await fetch('https://air.wzrd.tech/api/skills', {
+  method: 'POST',
+  credentials: 'include',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ action: 'uninstall', name: 'Web Research Pro' }),
+});
+const result = await res.json();
+```
+</CodeGroup>
+
+**Response** — `200 OK`
+
+<ResponseField name="action" type="string">
+  The action that was performed: `"uninstall"`.
+</ResponseField>
+
+<ResponseField name="name" type="string">
+  The name of the skill that was removed.
+</ResponseField>
+
+<ResponseField name="status" type="string">
+  Removal outcome, e.g. `"uninstalled"`.
+</ResponseField>
+
+```json
+{
+  "action": "uninstall",
+  "name": "Web Research Pro",
+  "status": "uninstalled"
+}
+```
+
+---
+
+## Error cases
+
+| Status | Meaning |
+|--------|---------|
+| `400` | Invalid `action` value, or `identifier` / `name` is missing. Check your request body. |
+| `401` | Session cookie is missing or expired. |
+| `404` | No skill found matching the given `identifier` or `name`. Use `GET /api/skills` to confirm the correct value. |
+| `409` | Install: the skill is already installed. Uninstall: the skill is not currently installed. |
+| `504` | The install or uninstall operation timed out after 300 seconds. Check the current state with `GET /api/skills` and retry if needed. |
+| `500` | Internal error. |
+
+<Warning>
+  Uninstalling a skill removes its tooling immediately. Any running agent task that relies on that skill may fail mid-execution. Make sure no active runs depend on the skill before uninstalling.
+</Warning>

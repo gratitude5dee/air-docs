@@ -1,0 +1,65 @@
+---
+title: "How Airv Works: Your Agent, Number, and Computer"
+sidebarTitle: "How It Works"
+description: "Understand how Airv's personal agent architecture keeps your data isolated, your memory persistent, and your agent always reachable."
+---
+
+Airv is built around a simple principle: one user gets one agent, and that agent gets its own dedicated computer. Nothing is shared between users at the memory or execution layer. Your agent knows your history, runs your tasks, and holds your files — completely isolated from every other agent on the platform.
+
+## Your Agent's Three Addresses
+
+Your agent is reachable at three distinct addresses. You can use whichever fits your workflow — they all land in the same conversation.
+
+<CardGroup cols={3}>
+  <Card title="iMessage Number" icon="message">
+    A dedicated Photon/Spectrum line assigned exclusively to your agent. No other user shares this number. Text it from any iPhone or Mac with iMessage enabled.
+  </Card>
+  <Card title="Email Inbox" icon="envelope">
+    `<username>@wzrd.tech` — powered by AgentMail. Your agent reads every email that arrives here and can reply, forward, or act on attachments just like a human assistant would.
+  </Card>
+  <Card title="Web Chat" icon="browser">
+    [air.wzrd.tech](https://air.wzrd.tech) gives you a full browser-based interface. Useful on desktop and for reviewing longer outputs or files your agent produces.
+  </Card>
+</CardGroup>
+
+All three addresses share the same underlying conversation context. A task you start over iMessage is visible in the web app and vice versa — your agent never loses the thread.
+
+## Your Cloud Computer (the Box)
+
+Every Airv account includes a personal Ubuntu VM — called your **Box** — that belongs exclusively to you. Your agent lives and works inside this VM.
+
+Your Box is where your agent's memory is stored: the full chat history, learned preferences, downloaded files, and any tools or scripts your agent has set up over time. Because this all lives on your VM rather than in a shared database, no other user or agent can access it.
+
+<Info>
+  Your Box starts on demand when you send a message and automatically stops after roughly **20 minutes of idle time** to keep costs low. When you send your next message, it resumes in seconds — fast enough that you won't notice it was paused. You never have to manage start/stop yourself.
+</Info>
+
+For tasks that involve risky or experimental code — running an untrusted script, testing a web scraper, trying a new tool — your agent spins up a **throwaway Daytona sandbox** on top of your Box. These ephemeral environments are discarded after the task completes, so nothing unstable ever touches your persistent VM.
+
+## The Control Plane
+
+A lightweight control plane sits between your messages and your Box. It handles three things:
+
+- **Routing** — every message you send (iMessage, email, or web) is matched to your specific agent and delivered to the right VM.
+- **Credentials** — your agent needs access to AI model APIs and other services. The control plane holds those provider keys and injects them at call time, so your VM never stores raw API credentials.
+- **Approval gates** — before your agent sends an email on your behalf or takes an irreversible action, the control plane enforces a **"Needs You"** checkpoint. Your agent pauses and asks for your confirmation before proceeding.
+
+## Privacy by Design
+
+Airv's architecture is structured so that sensitive data never touches shared infrastructure.
+
+- **No message content in the shared database.** The central database holds only routing metadata (which number maps to which VM). Your actual messages and memory live exclusively on your Box.
+- **VM isolation.** Your Ubuntu VM has no network path to another user's VM. There is no shared filesystem or shared process space.
+- **Keys never reach your VM.** Model provider API keys are injected by the control plane at request time and are never written to disk on your Box.
+
+## Speed Tiers
+
+When you ask your agent to do something, it picks a speed tier automatically based on the complexity of the task — or you can tell it explicitly.
+
+| Tier | Best for |
+|---|---|
+| **Fast** | Quick lookups, short replies, simple edits |
+| **Balanced** | Most everyday tasks — a sensible default |
+| **Deep** | Complex reasoning, long research tasks, multi-step plans |
+
+These tiers map to real AI models on the server side. You never need to name a model or configure an API — just tell your agent how thorough you need it to be.

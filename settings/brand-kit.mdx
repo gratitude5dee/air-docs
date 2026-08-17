@@ -1,0 +1,113 @@
+---
+title: "Brand Kit: Define Your Agent's Creative Voice"
+sidebarTitle: "Brand Kit"
+description: "Set your brand's palette, typography, voice, and content rules so your agent generates on-brand social posts and ad creatives automatically."
+---
+
+The Brand Kit is a set of guidelines your agent consults every time it generates creative content — social posts, ad copy, image layouts, video scripts, and more. When you fill it in, your agent produces output that looks and sounds like you without requiring a prompt every time. If you leave it empty, your agent uses sensible defaults and asks for creative direction as needed.
+
+## What You Can Configure
+
+Every field in the Brand Kit is optional, but each one you fill in narrows the creative space your agent works within — reducing back-and-forth and improving output quality automatically.
+
+### Name & Label
+
+Your brand's display name as it should appear in generated content. This is distinct from your Airv username.
+
+### Palette
+
+<CardGroup cols={3}>
+  <Card title="Background" icon="square">
+    The primary background color for generated visuals and layouts.
+  </Card>
+  <Card title="Midground" icon="square-half">
+    The secondary surface color used for cards, panels, and layered elements.
+  </Card>
+  <Card title="Foreground" icon="font">
+    The primary text and icon color, applied on top of background and midground surfaces.
+  </Card>
+</CardGroup>
+
+You can also define additional custom colors beyond the three core slots — useful for accent colors, CTA buttons, or brand-specific gradients.
+
+### Typography
+
+| Field | Description |
+|---|---|
+| Sans-serif font | Your body and UI typeface |
+| Display font | Headlines and hero text |
+| Base size | Root font size in pixels (typically 16px) |
+| Google Fonts URL | Paste a Google Fonts `@import` URL to load a custom typeface |
+
+### Layout
+
+- **Border radius**: controls how rounded corners appear in generated UI mockups and ad creatives (from sharp `0px` to fully rounded `999px`)
+- **Content density**: choose **Compact**, **Comfortable**, or **Spacious** to control whitespace and information density in generated layouts
+
+### Assets
+
+- **Logo URL**: a publicly accessible URL to your primary logo file (SVG or PNG recommended)
+- **Custom asset references**: named references to other brand assets — icons, product shots, pattern files — your agent can pull into generated content
+
+### Voice
+
+| Field | Options / Description |
+|---|---|
+| Register | Formal, Professional, Neutral, Casual, Playful |
+| Person | First person, Second person, Third person |
+| Reading level | Grade level or plain-language target (e.g., Grade 8, Plain English) |
+| Banned words | A list of words or phrases your agent will never use in generated copy |
+
+### Claims
+
+Your agent can generate marketing copy that makes product claims. The Claims section lets you set the rules upfront so content stays compliant without manual review of every draft.
+
+- **Allowed claims**: statements your agent can assert freely (e.g., "Award-winning design")
+- **Forbidden claims**: statements your agent must never make — these are blocked before content is proposed
+- **Claims requiring legal review**: statements that are permissible but need sign-off before publishing; when your agent produces one, it automatically creates a flag in **Needs You**
+
+### Imagery
+
+- **Visual do's**: subjects, styles, or moods to actively include in generated images and video
+- **Visual don'ts**: subjects, styles, or depictions to avoid
+- **Talent release requirements**: specify whether any human likeness in generated imagery requires a release on file before use
+
+### Markets
+
+List the target markets or regions your brand operates in. Your agent uses this to tailor language, regulatory awareness, and cultural references in generated content.
+
+## How to Edit Your Brand Kit
+
+<Steps>
+  <Step title="Open Settings">
+    Navigate to **Settings → Brand Kit** in the Airv web app.
+  </Step>
+  <Step title="Fill in your fields">
+    Work through each section — Name, Palette, Typography, Layout, Assets, Voice, Claims, Imagery, and Markets. Every field is optional; fill in what you have.
+  </Step>
+  <Step title="Save">
+    Click **Save Brand Kit**. Your changes compile and sync to your agent automatically. If your agent is currently active, the updated Brand Kit takes effect on its next creative task.
+  </Step>
+</Steps>
+
+<Tip>
+  Start with just **Palette** and **Voice** — those two fields have the single biggest impact on content quality. Once your agent is producing output that looks and sounds right, layer in the rest of the Brand Kit over time.
+</Tip>
+
+## Versioning
+
+Every time you save, Airv increments the Brand Kit's revision number. You can see the current revision in the Brand Kit header.
+
+<Info>
+  If your agent was asleep when you saved a new revision, the updated Brand Kit syncs automatically the next time your agent wakes up. You never need to manually push an update or restart your agent.
+</Info>
+
+## How the Brand Kit Affects Your Agent
+
+Once your Brand Kit is active, your agent applies it without being asked:
+
+- **Social posts** follow your voice register, respect your banned word list, and use your brand's person setting
+- **Ad creatives** pull in your palette and logo automatically
+- **Forbidden claims** are caught before a draft is ever shown to you
+- **Legal-review claims** surface as a flag in **Needs You**, so nothing requiring sign-off slips through to publishing
+- **Generated images** follow your imagery do's and don'ts and check talent release rules before proposing visuals with people in them

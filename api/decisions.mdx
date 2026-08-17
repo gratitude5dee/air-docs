@@ -1,0 +1,176 @@
+---
+title: "Decisions (Needs You Queue)"
+sidebarTitle: "Decisions"
+description: "Retrieve all pending agent decisions waiting in your Needs You queue and resolve each one by sending an approve or dismiss action."
+---
+
+Airv surfaces certain agent actions as decisions before executing them — for example, sending a drafted email, publishing ad copy, or reconnecting a broken integration. These pending items appear in your **Needs You** queue. You use this API to list what is waiting for you and to resolve each item by approving or dismissing it. Resolving a decision unblocks the agent so it can continue the associated run.
+
+<Note>
+  Decisions are user-scoped. Your session cookie determines which queue you see and which items you are authorised to resolve.
+</Note>
+
+---
+
+## List pending decisions
+
+### `GET /api/decisions`
+
+Returns all unresolved decisions in your Needs You queue. Each item includes its kind, a human-readable description, and any metadata the agent collected to help you make a choice.
+
+<CodeGroup>
+```bash cURL
+curl -s https://air.wzrd.tech/api/decisions \
+  --cookie "session=<your-session-cookie>"
+```
+
+```typescript TypeScript
+const res = await fetch('https://air.wzrd.tech/api/decisions', {
+  credentials: 'include',
+});
+const decisions = await res.json();
+```
+</CodeGroup>
+
+**Response** — `200 OK`
+
+<ResponseField name="decisions" type="array">
+  Array of pending decision objects.
+</ResponseField>
+
+<ResponseField name="decisions[].id" type="string">
+  Unique identifier for this decision. Pass it to `POST /api/decisions` to resolve.
+</ResponseField>
+
+<ResponseField name="decisions[].kind" type="string">
+  The category of decision. One of: `email_draft`, `ad_write`, `content_plan`, `reconnect`, `revise`.
+</ResponseField>
+
+<ResponseField name="decisions[].description" type="string">
+  A short human-readable summary of what the agent is proposing or waiting on.
+</ResponseField>
+
+<ResponseField name="decisions[].payload" type="object">
+  Kind-specific metadata. For `email_draft` this may include the draft body and recipient; for `reconnect` it includes the integration name.
+</ResponseField>
+
+<ResponseField name="decisions[].created_at" type="string">
+  ISO 8601 timestamp of when the decision was created.
+</ResponseField>
+
+```json
+{
+  "decisions": [
+    {
+      "id": "dec_001",
+      "kind": "email_draft",
+      "description": "Send follow-up email to alice@example.com",
+      "payload": {
+        "to": "alice@example.com",
+        "subject": "Following up on Q3 proposal",
+        "body": "Hi Alice, just checking in on the proposal we sent last week…"
+      },
+      "created_at": "2024-06-10T09:15:00Z"
+    },
+    {
+      "id": "dec_002",
+      "kind": "reconnect",
+      "description": "Reconnect Google Calendar — token expired",
+      "payload": {
+        "integration": "google_calendar"
+      },
+      "created_at": "2024-06-10T09:20:00Z"
+    }
+  ]
+}
+```
+
+---
+
+## Resolve a decision
+
+### `POST /api/decisions`
+
+Approves or dismisses a pending decision. Approving allows the agent to proceed with the proposed action. Dismissing discards the decision and notifies the agent to skip it.
+
+<ParamField body="id" type="string" required>
+  The `id` of the decision to resolve, as returned by `GET /api/decisions`.
+</ParamField>
+
+<ParamField body="action" type="string" required>
+  How to resolve the decision. Must be `"approve"` or `"dismiss"`.
+</ParamField>
+
+**Supported decision kinds**
+
+| Kind | What happens on approve |
+|------|------------------------|
+| `email_draft` | The agent sends the drafted email immediately. |
+| `ad_write` | The agent submits the ad copy to the connected ad platform. |
+| `content_plan` | The agent queues the content plan for scheduling. |
+| `reconnect` | The agent initiates re-authentication for the flagged integration. |
+| `revise` | The agent applies the suggested revision to the target document or asset. |
+
+<CodeGroup>
+```bash cURL (approve)
+curl -s -X POST https://air.wzrd.tech/api/decisions \
+  -H "Content-Type: application/json" \
+  --cookie "session=<your-session-cookie>" \
+  -d '{ "id": "dec_001", "action": "approve" }'
+```
+
+```bash cURL (dismiss)
+curl -s -X POST https://air.wzrd.tech/api/decisions \
+  -H "Content-Type: application/json" \
+  --cookie "session=<your-session-cookie>" \
+  -d '{ "id": "dec_001", "action": "dismiss" }'
+```
+
+```typescript TypeScript
+const res = await fetch('https://air.wzrd.tech/api/decisions', {
+  method: 'POST',
+  credentials: 'include',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ id: 'dec_001', action: 'approve' }),
+});
+const result = await res.json();
+```
+</CodeGroup>
+
+**Response** — `200 OK`
+
+<ResponseField name="id" type="string">
+  The ID of the resolved decision.
+</ResponseField>
+
+<ResponseField name="action" type="string">
+  The action that was applied: `"approve"` or `"dismiss"`.
+</ResponseField>
+
+<ResponseField name="status" type="string">
+  Confirmation of the resolution, e.g. `"resolved"`.
+</ResponseField>
+
+```json
+{
+  "id": "dec_001",
+  "action": "approve",
+  "status": "resolved"
+}
+```
+
+---
+
+## Error cases
+
+| Status | Meaning |
+|--------|---------|
+| `400` | Missing or invalid `id` or `action`. Ensure `action` is exactly `"approve"` or `"dismiss"`. |
+| `401` | Session cookie is missing or expired. Re-authenticate via phone OTP. |
+| `404` | No decision with the given `id` exists in your queue. It may have already been resolved. |
+| `409` | The decision has already been resolved and cannot be acted on again. |
+| `500` | Internal error. Retry the request after a short delay. |
+
+<Warning>
+  Once you approve an `email_draft` or `ad_write` decision the agent executes the action immediately. There is no additional confirmation step, so review the decision payload carefully before approving.
+</Warning>

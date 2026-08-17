@@ -1,0 +1,96 @@
+---
+title: "Skills and Connectors: Extend Your Agent's Abilities"
+sidebarTitle: "Skills & Connectors"
+description: "Install skills to teach your agent new capabilities, and connect third-party services like Gmail and GitHub via OAuth using Composio."
+---
+
+Your agent ships with a solid foundation, but its real power comes from what you add to it. Skills let you install new capability packages — image generation, browser automation, code execution, and more — while Connectors wire up the external services your agent needs to act on your behalf. Together, they turn your agent from a capable assistant into a fully integrated extension of your workflow.
+
+<CardGroup cols={2}>
+  <Card title="Skills" icon="puzzle-piece">
+    Pre-built capability packages you install directly into your agent's environment. Once installed, a skill is available every session — no reinstallation needed.
+  </Card>
+  <Card title="Connectors" icon="link">
+    OAuth integrations with third-party services, powered by Composio. Connect Gmail, GitHub, Google Calendar, and dozens more — your agent gets access automatically.
+  </Card>
+</CardGroup>
+
+## Skills
+
+A skill is a self-contained package that teaches your agent how to do something new. Installing a skill places it on your VM and makes it available to your agent at the start of every subsequent session.
+
+**Available skills include:**
+
+- **Image generation** — create images from text prompts or reference photos
+- **Video generation** — produce short video clips from descriptions or existing media
+- **Music creation** — compose and arrange audio tracks
+- **Code execution** — run scripts in isolated environments and return results
+- **Browser automation** — control a headless browser to scrape, fill forms, or test web apps
+
+### Installing a skill
+
+<Steps>
+  <Step title="Open the Skills tab">
+    In the web app, navigate to the **Skills** tab in the left sidebar.
+  </Step>
+  <Step title="Find what you need">
+    Use the search bar or browse by category to find the skill you want to install.
+  </Step>
+  <Step title="Install">
+    Click **Install** on the skill card. The skill is added to your VM and activated for your agent.
+  </Step>
+  <Step title="Toggle on or off">
+    Use the toggle on any installed skill to enable or disable it. Changes take effect at the start of your agent's next session — no restart required.
+  </Step>
+</Steps>
+
+<Info>
+  Skills are installed persistently on your VM. You won't be charged for re-installation on reconnect, and your agent won't spend time setting up tools it already has.
+</Info>
+
+---
+
+## Connectors
+
+Connectors give your agent access to third-party services through OAuth — the same secure authorization flow you use when you "Sign in with Google" on a website. The integration is powered by **Composio**, which handles token storage and provides your agent with a scoped MCP (Model Context Protocol) endpoint.
+
+**Services you can connect include:**
+
+- Gmail
+- GitHub
+- Google Calendar
+- Slack
+- Linear
+- Notion
+- And many more from the Composio catalog
+
+### Connecting a service
+
+<Steps>
+  <Step title="Open the Connectors tab">
+    In the web app, navigate to the **Connectors** tab.
+  </Step>
+  <Step title="Pick a service">
+    Browse or search for the service you want to connect, then click **Connect**.
+  </Step>
+  <Step title="Authorize via OAuth">
+    A secure mini-app opens the service's OAuth screen. Sign in and grant the requested permissions. You're redirected back to Airv when complete.
+  </Step>
+  <Step title="Your agent is ready">
+    The connected account is stored by Composio and your agent gains access to that service's tools automatically in every subsequent session.
+  </Step>
+</Steps>
+
+### Revoking a connector
+
+To disconnect a service, open the **Connectors** tab, find the connected account, and click **Disconnect**. Your agent immediately loses access to that service's tools.
+
+### Security model
+
+<Note>
+  Airv never stores your OAuth tokens in its database, and they never touch your VM. Composio holds the tokens on your behalf and exposes only a **per-user MCP endpoint** to your agent — a scoped interface that lets your agent call tools without ever seeing the raw credential. You can revoke access at any time from the Connectors tab.
+</Note>
+
+<Note>
+  Once you connect Gmail (available after the M7 milestone), your agent can read your inbox and take action on emails — all within a single conversation turn, without switching apps.
+</Note>
